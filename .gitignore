@@ -1,3 +1,5 @@
 **/bin
 **/obj
 **/.vs
+Api/*.bat
+docker-compose.development.yaml

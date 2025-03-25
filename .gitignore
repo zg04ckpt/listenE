@@ -1,5 +1,7 @@
 **/bin
 **/obj
 **/.vs
-Api/*.bat
+**/export-db.bat
+**/import-db.bat
 docker-compose.development.yaml
+docker-compose.production.yaml

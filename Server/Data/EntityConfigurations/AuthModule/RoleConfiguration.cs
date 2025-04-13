@@ -15,7 +15,7 @@ namespace Data.EntityConfigurations.AuthModule
         {
             builder.ToTable("Roles");
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.Name).HasMaxLength(20);
+            builder.Property(e => e.Name).HasColumnType("varchar(20)").IsRequired();
         }
     }
 }

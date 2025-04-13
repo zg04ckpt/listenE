@@ -1,11 +1,6 @@
-﻿using Core.Modules.Listening.Entities;
+﻿using Core.Modules.ListeningModule.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data.EntityConfigurations.ListeningModule
 {
@@ -15,12 +10,14 @@ namespace Data.EntityConfigurations.ListeningModule
         {
             builder.ToTable("Sessions");
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.Name).HasMaxLength(50);
+            builder.Property(e => e.Name).HasColumnType("varchar(255)").IsRequired();
 
             builder.HasOne(s => s.Topic)
                 .WithMany(t => t.Sessions)
                 .HasForeignKey(s => s.TopicId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(e => e.TopicId);
         }
     }
 }

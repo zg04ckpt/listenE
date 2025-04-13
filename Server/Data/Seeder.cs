@@ -36,7 +36,6 @@ namespace Data
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
                         });
-
                     }
                     await _roleRepository.SaveToDatabaseAsync();
                 }
@@ -52,14 +51,14 @@ namespace Data
             IBaseRepository<Role> _roleRepository, 
             IBaseRepository<UserRole> _userRoleRepository)
         {
-            // Create 2 admin account: one for testing, and one as the default 
+            // Create 2 admin account: one for testing, and one as the default
             try
             {
                 if (!await _userRepository.ExistsAsync(null))
                 {
                     var admin = new User
                     {
-                        Id = Guid.NewGuid(),
+                        Id = 1,
                         FirstName = "Admin",
                         LastName = "System",
                         ImageUrl = "https://res.cloudinary.com/dvk5yt0oi/image/upload/v1742443035/listene/images/hseg5ibhbspzopkced45.jpg",

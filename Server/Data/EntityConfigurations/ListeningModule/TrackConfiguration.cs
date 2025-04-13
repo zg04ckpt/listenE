@@ -1,11 +1,6 @@
-﻿using Core.Modules.Listening.Entities;
+﻿using Core.Modules.ListeningModule.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data.EntityConfigurations.ListeningModule
 {
@@ -15,12 +10,16 @@ namespace Data.EntityConfigurations.ListeningModule
         {
             builder.ToTable("Tracks");
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.Name).HasMaxLength(50);
+            builder.Property(e => e.Name).HasColumnType("varchar(255)").IsRequired();
+            builder.Property(e => e.FullAudioTranscript).HasColumnType("text").IsRequired();
+            builder.Property(e => e.FullAudioUrl).HasColumnType("varchar(2048)").IsRequired();
 
             builder.HasOne(t => t.Session)
                 .WithMany(s => s.Tracks)
                 .HasForeignKey(t => t.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(e => e.SessionId);
         }
     }
 }

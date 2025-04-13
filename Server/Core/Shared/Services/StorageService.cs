@@ -3,20 +3,17 @@ using CloudinaryDotNet.Actions;
 using Core.Shared.Interfaces.IService;
 using Core.Shared.Utilities;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace Core.Shared.Services
 {
     public class StorageService : IStorageService
     {
         private readonly Cloudinary _cloudinary;
+        private ILogger<StorageService> _logger;
 
-        public StorageService()
+        public StorageService(ILogger<StorageService> logger)
         {
             _cloudinary = new Cloudinary(new Account
             {
@@ -25,6 +22,7 @@ namespace Core.Shared.Services
                 ApiSecret = EnvHelper.GetCloudinaryApiSecret()
             });
             _cloudinary.Api.Secure = true;
+            _logger = logger;
         }
 
         public async Task<string> GetHtmlTemplate(string templateFileName)
@@ -40,6 +38,22 @@ namespace Core.Shared.Services
             return result.StatusCode == System.Net.HttpStatusCode.OK;
         }
 
+        public async Task<string?> SaveAudio(MemoryStream mp3Stream)
+        {
+            var uploadParam = new RawUploadParams
+            {
+                Folder = "listene/audios",
+                File = new FileDescription(Guid.NewGuid() + ".mp3", mp3Stream)
+            };
+            var result = await _cloudinary.UploadAsync(uploadParam);
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return result.SecureUrl.ToString();
+            }
+            _logger.LogError(result.Error.Message);
+            return null;
+        }
+
         public async Task<string?> SaveImage(IFormFile file)
         {
             if (file.Length == 0) return null;
@@ -51,7 +65,12 @@ namespace Core.Shared.Services
             };
 
             var result = await _cloudinary.UploadAsync(uploadParam);
-            return result.SecureUrl.ToString();
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return result.SecureUrl.ToString();
+            }
+            _logger.LogError(result.Error.Message);
+            return null;
         }
     }
 }

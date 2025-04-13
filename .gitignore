@@ -3,5 +3,8 @@
 **/.vs
 **/export-db.bat
 **/import-db.bat
+**/appsettings.Production.json
+**/Logs
+**/Temp
 docker-compose.development.yaml
 docker-compose.production.yaml

@@ -2,6 +2,7 @@
 using Core.Shared.Interfaces.IService;
 using Core.Shared.Utilities;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
@@ -12,18 +13,13 @@ namespace Core.Shared.Services
     {
         private readonly MailConfiguration _mailConfig;
         private readonly IStorageService _storageService;
+        private readonly ILogger<MailService> _logger;
 
-        public MailService(IOptions<MailConfiguration> config, IStorageService storageService)
+        public MailService(IOptions<MailConfiguration> config, IStorageService storageService, ILogger<MailService> logger)
         {
             _mailConfig = config.Value;
             _storageService = storageService;
-        }
-
-        public async Task<bool> SendConfirmAccountMail(string email, string url, string templateFileName)
-        {
-            string template = await _storageService.GetHtmlTemplate(templateFileName);
-            template = template.Replace("CONFIRM_URL", url);
-            return await SendMail(email, "Xác thực tài khoản", template);
+            _logger = logger;
         }
 
         public async Task<bool> SendMail(string receiver, string subject, string htmlContent)
@@ -33,7 +29,7 @@ namespace Core.Shared.Services
                 // Create a mail contain
                 MimeMessage mail = new();
                 mail.Subject = subject;
-                mail.From.Add(new MailboxAddress("ZShop", EnvHelper.GetSystemEmail()));
+                mail.From.Add(new MailboxAddress("ListenE", EnvHelper.GetSystemEmail()));
                 mail.To.Add(MailboxAddress.Parse(receiver));
                 mail.Body = new TextPart(MimeKit.Text.TextFormat.Html)
                 {
@@ -49,8 +45,9 @@ namespace Core.Shared.Services
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "An email sender error occurred.");
                 return false;
             }
 

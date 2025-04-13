@@ -1,10 +1,5 @@
 ﻿using Core.Shared.Wrappers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Shared.Interfaces.IRepository
 {
@@ -13,41 +8,57 @@ namespace Core.Shared.Interfaces.IRepository
         /// <summary>
         /// Checks if any entity satisfies the given predicate condition.
         /// </summary>
-        Task<bool> ExistsAsync(Expression<Func<TEntity, bool>>? predicate);
+        Task<bool> ExistsAsync(Expression<Func<TEntity, bool>>? predicate = null);
+
+        /// <summary>
+        /// Checks if any entity satisfies the given predicate condition.
+        /// </summary>
+        Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null);
 
         /// <summary>
         /// Retrieves all entities in the collection.
         /// </summary>
-        Task<IEnumerable<TEntity>> GetAllAsync();
+        Task<IEnumerable<TEntity>> GetAllAsync(
+            Expression<Func<TEntity, object>>? sortBy = null,
+            bool isAsc = true);
 
         /// <summary>
         /// Retrieves all entities that satisfy the given predicate condition.
         /// </summary>
-        Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<IEnumerable<TEntity>> GetAllAsync(
+            Expression<Func<TEntity, bool>> predicate, 
+            Expression<Func<TEntity, object>>? sortBy = null,
+            bool isAsc = true);
 
         /// <summary>
         /// Retrieves all entities that satisfy the predicate, projected into a specified type.
         /// </summary>
         Task<IEnumerable<TProjection>> GetAllAsync<TProjection>(
             Expression<Func<TEntity, bool>> predicate,
-            Expression<Func<TEntity, TProjection>> projection);
+            Expression<Func<TEntity, TProjection>> projection,
+            Expression<Func<TEntity, object>>? sortBy = null,
+            bool isAsc = true);
 
         /// <summary>
         /// Retrieves a paginated list of entities based on the predicate, page number, and page size.
         /// </summary>
         Task<Paginated<TEntity>> GetPaginatedAsync(
-            Expression<Func<TEntity, bool>>? predicate,
+            Expression<Func<TEntity, bool>> predicate,
             int page,
-            int size);
+            int size,
+            Expression<Func<TEntity, object>>? sortBy = null,
+            bool isAsc = true);
 
         /// <summary>
         /// Retrieves a paginated list of entities based on the predicate, projected into a specified type.
         /// </summary>
         Task<Paginated<TProjection>> GetPaginatedAsync<TProjection>(
-            Expression<Func<TEntity, bool>>? predicate,
+            Expression<Func<TEntity, bool>> predicate,
             int page,
             int size,
-            Expression<Func<TEntity, TProjection>> projection);
+            Expression<Func<TEntity, TProjection>> projection,
+            Expression<Func<TEntity, object>>? sortBy = null,
+            bool isAsc = true);
 
         /// <summary>
         /// Finds the first entity that satisfies the given predicate.
@@ -74,12 +85,7 @@ namespace Core.Shared.Interfaces.IRepository
         /// <summary>
         /// Updates a single entity in the collection.
         /// </summary>
-        Task UpdateAsync(TEntity entity);
-
-        /// <summary>
-        /// Updates multiple entities in the collection.
-        /// </summary>
-        Task UpdateRangeAsync(IEnumerable<TEntity> entities);
+        Task UpdateAsync(TEntity entity, Action<TEntity> updateAction);
 
         /// <summary>
         /// Deletes a single entity from the collection.

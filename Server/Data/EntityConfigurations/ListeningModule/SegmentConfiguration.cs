@@ -1,11 +1,6 @@
-﻿using Core.Modules.Listening.Entities;
+﻿using Core.Modules.ListeningModule.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data.EntityConfigurations.ListeningModule
 {
@@ -15,6 +10,8 @@ namespace Data.EntityConfigurations.ListeningModule
         {
             builder.ToTable("Segments");
             builder.HasKey(e => e.Id);
+            builder.Property(e => e.Transcript).HasColumnType("text").IsRequired();
+            builder.Property(e => e.AudioUrl).HasColumnType("varchar(2028)").IsRequired();
 
             builder.HasOne(s => s.Track)
                 .WithMany(t => t.Segments)

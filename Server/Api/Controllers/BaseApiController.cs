@@ -1,5 +1,6 @@
 ﻿using Core.Shared.DTOs;
 using Core.Shared.Exceptions;
+using Core.Shared.Utilities;
 using Core.Shared.Wrappers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,8 @@ namespace Api.Controllers
             _logger = logger;
         }
 
-        protected async Task<IActionResult> TryExecute<T>(Func<Task<ApiResult<T>>> action, int successCode = 200)
+        protected async Task<IActionResult> TryExecute<T>(
+            Func<Task<ApiResult<T>>> action, int successCode = 200)
         {
             try
             {
@@ -54,13 +56,21 @@ namespace Api.Controllers
                     Message = ex.Message,
                 });
             }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(new ApiErrorDto
+                {
+                    Code = ex.Code,
+                    Message = ex.Message,
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error occurred.");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new ApiErrorDto { 
-                        Code = "UNKNOWN_ERROR",
+                        Code = ApiHelper.ErrorCodes.UNKNOWN_ERROR,
                         Message = "An unexpected error occurred."
                     });
             }

@@ -24,6 +24,8 @@
 
 	<ItemGroup>
 		<None Include="Resources\Templates\**" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="Resources\Temp\**" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="Logs\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

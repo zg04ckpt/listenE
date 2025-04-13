@@ -9,7 +9,6 @@ namespace Api.Controllers
     public class TestController : ControllerBase
     {
         [HttpGet]
-        [Authorize]
         public string Test()
         {
             return "api running...";

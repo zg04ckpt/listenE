@@ -12,5 +12,6 @@ namespace Core.Shared.Interfaces.IService
         Task<string> GetHtmlTemplate(string templateFileName);
         Task<string?> SaveImage(IFormFile file);
         Task<bool> RemoveImage(string imageUrl);
+        Task<string?> SaveAudio(MemoryStream mp3Stream);
     }
 }

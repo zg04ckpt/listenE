@@ -19,10 +19,16 @@ namespace Core.Shared.Utilities
 
             public const string CONFLICT = "CONFLICT";
             public const string ALREADY_EXISTS = "ALREADY_EXISTS";
+            public const string DUPLICATE_ACTION = "DUPLICATE_ACTION";
 
             public const string FORBIDDEN = "FORBIDDEN";
 
             public const string FAILED_VALIDATION = "FAILED_VALIDATION";
+
+            public const string UNKNOWN_ERROR = "UNKNOWN_ERROR";
+
+            public const string INVALID_REQUEST = "INVALID_REQUEST";
+            public const string INVALID_OR_EXPIRED_TOKEN = "INVALID_OR_EXPIRED_TOKEN";
 
         }
     }

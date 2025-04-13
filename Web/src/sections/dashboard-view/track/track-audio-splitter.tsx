@@ -92,11 +92,9 @@ export default function TrackAudioSplitter({
   );
   const [apiLoading, setApiLoading] = useState(false);
 
-  // State for track name
   const [trackName, setTrackName] = useState("");
   const [trackNameError, setTrackNameError] = useState("");
 
-  // State for clear confirmation dialog
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [sentenceToClean, setSentenceToClean] = useState<number | null>(null);
 
@@ -299,7 +297,6 @@ export default function TrackAudioSplitter({
       return;
     }
 
-    // If we're already playing this sentence, pause it
     if (playingSentenceId === sentenceId) {
       if (audioElementRef.current) {
         audioElementRef.current.pause();
@@ -308,28 +305,22 @@ export default function TrackAudioSplitter({
       return;
     }
 
-    // Create or get audio element
     if (!audioElementRef.current) {
       audioElementRef.current = new Audio(audioUrl);
     } else {
       audioElementRef.current.src = audioUrl;
     }
 
-    // Set up event listeners
     audioElementRef.current.onended = () => {
       setPlayingSentenceId(null);
     };
 
-    // Set the current time to the start time of the sentence
     audioElementRef.current.currentTime = sentence.startSec;
 
-    // Play the audio
     audioElementRef.current.play();
 
-    // Set the playing sentence ID
     setPlayingSentenceId(sentenceId);
 
-    // Set a timeout to pause the audio when it reaches the end time
     const duration = sentence.endSec - sentence.startSec;
     setTimeout(() => {
       if (audioElementRef.current && playingSentenceId === sentenceId) {
@@ -339,20 +330,17 @@ export default function TrackAudioSplitter({
     }, duration * 1000 + 50);
   };
 
-  // Handle opening the clear confirmation dialog
   const handleClearClick = (sentenceId: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent row selection
+    e.stopPropagation();
     setSentenceToClean(sentenceId);
     setClearDialogOpen(true);
   };
 
-  // Handle confirming the clear action
   const handleClearConfirm = () => {
     if (sentenceToClean !== null) {
       setSentences((prev) =>
         prev.map((s) => {
           if (s.id === sentenceToClean) {
-            // Remove timing information
             const { startSec, endSec, ...rest } = s;
             return rest as IPostSegmentItem;
           }
@@ -360,12 +348,10 @@ export default function TrackAudioSplitter({
         })
       );
 
-      // If this was the last assigned sentence, reset that state
       if (lastAssignedSentenceId === sentenceToClean) {
         setLastAssignedSentenceId(null);
       }
 
-      // If this sentence was playing, stop it
       if (playingSentenceId === sentenceToClean) {
         if (audioElementRef.current) {
           audioElementRef.current.pause();
@@ -374,12 +360,10 @@ export default function TrackAudioSplitter({
       }
     }
 
-    // Close the dialog and reset state
     setClearDialogOpen(false);
     setSentenceToClean(null);
   };
 
-  // Handle canceling the clear action
   const handleClearCancel = () => {
     setClearDialogOpen(false);
     setSentenceToClean(null);
@@ -416,19 +400,16 @@ export default function TrackAudioSplitter({
   };
 
   const handleCreateNew = async () => {
-    // Validate track name
     if (!trackName) {
       setTrackNameError("Vui lòng nhập tên cho track");
       return;
     }
 
-    // Check if audio file is uploaded
     if (!audioFile) {
       setError("Vui lòng tải lên file audio");
       return;
     }
 
-    // Check if all sentences have been assigned times
     const unassignedSentences = sentences.filter(
       (s) => s.startSec === undefined || s.endSec === undefined
     );
@@ -444,14 +425,25 @@ export default function TrackAudioSplitter({
     setError(null);
 
     try {
-      // Create FormData to send to API
       const formData = new FormData();
       formData.append("name", trackName);
       formData.append("fullTranscript", getFullTranscript());
       formData.append("fullAudio", audioFile);
-      formData.append("segments", JSON.stringify(sentences));
-
-      // Call API to create new track
+      sentences.forEach((segment, index) => {
+        formData.append(
+          `segments[${index}][startSec]`,
+          (segment.startSec ?? 0).toString()
+        );
+        formData.append(
+          `segments[${index}][endSec]`,
+          (segment.endSec ?? 0).toString()
+        );
+        formData.append(`segments[${index}][transcript]`, segment.transcript);
+        formData.append(
+          `segments[${index}][order]`,
+          (segment.order ?? 0).toString()
+        );
+      });
       if (sessionId) {
         const response = await handleCreateNewSessionTrack(
           Number(sessionId),
@@ -460,7 +452,6 @@ export default function TrackAudioSplitter({
         console.log("Track created successfully:", response);
         showSuccess("Tạo mới track thành công!");
 
-        // Reset form after successful creation
         setTrackName("");
         setAudioFile(null);
         setAudioUrl(null);

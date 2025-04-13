@@ -135,6 +135,13 @@ namespace Core.Modules.ListeningModule.Services
                     ApiHelper.ErrorCodes.ALREADY_EXISTS);
             }
 
+            // At least 1 segment exists
+            if (request.Segments.Count == 0)
+            {
+                throw new BadRequestException(
+                    "The segment array must contain at least one element.");
+            }
+
             // Save audio file in memory stream
             using var trackStream = new MemoryStream();
             await request.FullAudio.CopyToAsync(trackStream);

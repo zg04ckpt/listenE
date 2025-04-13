@@ -28,4 +28,8 @@
 		<None Include="Logs\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Resources\Temp\" />
+	</ItemGroup>
+
 </Project>

@@ -1,0 +1,67 @@
+services:
+  web:
+    container_name: web
+    image: web:2.0
+    build: 
+      context: ./Client/Web
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+    volumes:
+      - nginx-config:/etc/nginx/conf.d
+    restart: always
+
+  api:
+    container_name: api
+    image: api:2.0
+    build: 
+      context: ./Api
+      dockerfile: Dockerfile.api
+    environment:
+      TZ: "Asia/Ho_Chi_Minh"
+      SYSTEM_EMAIL: "[email làm bot để gửi mail]"
+      SYSTEM_EMAIL_PASS: "[mật khẩu ứng dụng của bot mail]"
+      ADMIN_EMAIL: "[email tài khoản admin]"
+      ADMIN_PASSWORD: "[mật khẩu]"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      SECRET_KEY: "[khóa bí mật để sinh token]"
+    volumes:
+      - resources:/App/Resources
+      - logs:/App/Logs
+    ports:
+      - 5000:80
+    depends_on:
+      - db
+    networks:
+      - app-network
+    restart: always
+
+
+  db:
+    build:
+      context: ./Api
+      dockerfile: Dockerfile.mysql
+    image: mysql:8.0.37
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: "[mật khẩu tài khoản root]"
+      MYSQL_DATABASE: "[db mặc định]"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - 3307:3306
+    networks:
+      - app-network
+    restart: always
+
+volumes:
+  nginx-config:
+  logs:
+  resources:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

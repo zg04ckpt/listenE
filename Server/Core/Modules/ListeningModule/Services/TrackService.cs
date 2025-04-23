@@ -9,6 +9,7 @@ using Core.Shared.Interfaces.IService;
 using Core.Shared.Utilities;
 using Core.Shared.Wrappers;
 using NAudio.Wave;
+using Org.BouncyCastle.Crypto.IO;
 using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -21,101 +22,21 @@ namespace Core.Modules.ListeningModule.Services
         private readonly IBaseRepository<Session> _sessionRepository;
         private readonly IBaseRepository<Segment> _segmentRepository;
         private readonly IStorageService _storageService;
-        private readonly IAudioConvertService _audioConvertService;
 
         public TrackService(
             IBaseRepository<Track> trackRepository,
             IBaseRepository<Session> sessionRepository,
             IStorageService storageService,
-            IBaseRepository<Segment> segmentRepository,
-            IAudioConvertService audioConvertService)
+            IBaseRepository<Segment> segmentRepository)
         {
             _trackRepository = trackRepository;
             _sessionRepository = sessionRepository;
             _storageService = storageService;
             _segmentRepository = segmentRepository;
-            _audioConvertService = audioConvertService;
-        }
-        public async Task<ApiResult<CheckSegmentResultDto>> CheckSegment(int segmentId, CheckSegmentCorrectDto request)
-        {
-            var segment = await _segmentRepository.FindAsync(e => e.Id == segmentId)
-                ?? throw new NotFoundException(
-                    "Segment does not exist.",
-                    ApiHelper.ErrorCodes.RESOURCE_NOT_FOUND);
-
-            // Replace all contraction word state to full word state
-            var userInput = StringHelper.ExpandContractions(request.Content);
-            var correct = StringHelper.ExpandContractions(segment.Transcript);
-
-            // Clean input
-            userInput = Regex.Replace(userInput, @"[^\w\s]", "");
-            correct = Regex.Replace(correct, @"[^\w\s]", "");
-
-            // Get words
-            var typedWords = userInput.Trim().Split(" ")
-                .Where(e => !string.IsNullOrEmpty(e))
-                .Select(e => e.ToLower())
-                .ToArray();
-            var correctWords = correct.Trim().Split(" ")
-                .Where(e => !string.IsNullOrEmpty(e))
-                .Select(e => e.ToLower())
-                .ToArray();
-
-            // Use LCS algorithm find the lcs words
-            var lcs = AlgorithmHelper.GetLCS(typedWords, correctWords);
-
-            // Checking
-            var index = 0;
-            var checkedWords = new List<WordCorrectListItem>();
-            foreach (var word in correctWords)
-            {
-                if (index < lcs.Count && word == lcs[index])
-                {
-                    checkedWords.Add(new()
-                    {
-                        Word = word,
-                        ResultType = Enums.WordCheckResultType.Correct,
-                        Order = checkedWords.Count + 1
-                    });
-                    index++;
-                } else
-                {
-                    checkedWords.Add(new()
-                    {
-                        Word = word,
-                        ResultType = Enums.WordCheckResultType.MissingOrWrong,
-                        Order = checkedWords.Count + 1
-                    });
-                }
-            }
-
-            // Calc result
-            var result = new CheckSegmentResultDto()
-            {
-                SegmentId = segment.Id,
-                CheckedWords = checkedWords,
-                CorrectRate = Math.Round((double)index / checkedWords.Count * 100f, 2),
-                CorrectTranscript = segment.Transcript,
-                Redundancy = typedWords.Length - correctWords.Length,
-            };
-            if (result.Redundancy < 0)
-            {
-                result.Redundancy = 0;
-            }
-            result.RedundancyRate = Math.Round((double)result.Redundancy / typedWords.Length * 100f, 2);
-            result.Score = (int)Math.Floor(result.CorrectRate - result.RedundancyRate);
-            if (result.Score < 0)
-            {
-                result.Score = 0;
-            }
-
-            return new ApiResult<CheckSegmentResultDto>
-            {
-                Data = result
-            };
         }
 
-        public async Task<ApiResult<TrackDto>> CreateNewTrackInSession(int sessionId, CreateTrackDto request)
+        
+        public async Task<ApiResult<TrackCreateResponseDto>> CreateNewTrackInSession(int sessionId, CreateTrackDto request)
         {
             // Check if session valid
             if (!await _sessionRepository.ExistsAsync(e => e.Id == sessionId))
@@ -135,91 +56,45 @@ namespace Core.Modules.ListeningModule.Services
                     ApiHelper.ErrorCodes.ALREADY_EXISTS);
             }
 
-            // At least 1 segment exists
+            // At least 1 seg exists
             if (request.Segments.Count == 0)
             {
                 throw new BadRequestException(
-                    "The segment array must contain at least one element.");
+                    "The seg array must contain at least one element.");
             }
 
-            // Save audio file in memory stream
-            using var trackStream = new MemoryStream();
-            await request.FullAudio.CopyToAsync(trackStream);
+            var audioHandler = new AudioHandler();
+            await audioHandler.InitializeAsync(request.FullAudio);
 
-            // Start read from first byte
-            trackStream.Position = 0;
-
-            // Convert MP3 => WAV
-            var wavStream = new MemoryStream();
-            await _audioConvertService.ConvertFromMP3ToWAV(trackStream, wavStream);
-
-            // Read audio from memory stream
-            wavStream.Position = 0;
-            using var reader = new WaveFileReader(wavStream);
-            var sampleRate = reader.WaveFormat.SampleRate;
-            var bytesPerSample = reader.WaveFormat.BitsPerSample / 8 * reader.WaveFormat.Channels;
-
-            // Split with segment
+            // Split stream for each segment
             var newSegments = new List<Segment>();
             foreach (var seg in request.Segments)
             {
-                // Check time
-                if (seg.StartSec >= seg.EndSec || seg.EndSec > reader.TotalTime.TotalSeconds)
-                {
-                    throw new BadRequestException(
-                        "End time must greater than start time and cannot exceed total time");
-                }
-
-                // Calculate read pos
-                long startPos = (long) seg.StartSec * sampleRate * bytesPerSample;
-                long bytesToRead = (long) (seg.EndSec - seg.StartSec) * sampleRate * bytesPerSample;
-
-                reader.Position = startPos;
-                byte[] buffer = new byte[bytesToRead];
-                int bytesRead = reader.Read(buffer, 0, (int)bytesToRead);
-
-                if (bytesRead < bytesToRead)
-                {
-                    Array.Resize(ref buffer, bytesRead);
-                }
-
-                // write to wav file
-                using var segStream = new MemoryStream();
-                using var writer = new WaveFileWriter(segStream, reader.WaveFormat);
-                writer.Write(buffer, 0, bytesRead);
-                segStream.Position = 0;
-
-                // Create upload stream
-                using var uploadStream = new MemoryStream();
-                await segStream.CopyToAsync(uploadStream);
-                uploadStream.Position = 0;
-
-                // Upload lên Cloudinary & save segment info
+                using var resultStream = new MemoryStream();
+                await audioHandler.Cut(seg.StartSec, seg.EndSec, resultStream);
                 newSegments.Add(new()
                 {
-                    Duration = writer.TotalTime,
-                    AudioUrl = await _storageService.SaveAudio(uploadStream)
+                    StartSec = seg.StartSec,
+                    EndSec = seg.EndSec,
+                    AudioUrl = await _storageService.SaveAudio(resultStream)
                         ?? throw new ServerErrorException("Failed to upload segment audio file."),
                     CreatedAt = DateTime.UtcNow,
                     OrderInTrack = seg.Order,
                     Transcript = seg.Transcript,
                     UpdatedAt = DateTime.UtcNow,
                 });
-
-                //uploadStream.Dispose();
             }
 
-            // Create track
-            trackStream.Position = 0;
             var track = new Track
             {
                 Name = request.Name,
-                FullAudioUrl = await _storageService.SaveAudio(trackStream)
+                FullAudioUrl = await _storageService.SaveAudio(
+                    await audioHandler.GetSourceMp3FileStream())
                     ?? throw new ServerErrorException("Failed to upload full track audio file."),
                 FullAudioTranscript = request.FullTranscript,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                FullAudioDuration = reader.TotalTime,
+                FullAudioDuration = audioHandler.GetTotalTime(),
                 OrderInSession = (await _trackRepository.CountAsync(e => e.SessionId == sessionId)) + 1,
                 SessionId = sessionId
             };
@@ -230,11 +105,12 @@ namespace Core.Modules.ListeningModule.Services
             newSegments.ForEach(e => e.TrackId = track.Id);
             await _segmentRepository.AddRangeAsync(newSegments);
             await _trackRepository.SaveToDatabaseAsync();
+            audioHandler.ClearAll();
 
-            return new ApiResult<TrackDto>
+            return new ApiResult<TrackCreateResponseDto>
             {
                 Message = "Create track successfully.",
-                Data = new TrackDto
+                Data = new TrackCreateResponseDto
                 {
                     Id = track.Id,
                     CreatedAt = track.CreatedAt,
@@ -252,26 +128,36 @@ namespace Core.Modules.ListeningModule.Services
 
         public async Task<ApiResult<DeleteResponseDto>> DeleteTrack(int trackId)
         {
-            // Find and remove track
+            // Find target track and all child seg
             var track = await _trackRepository.FindAsync(e => e.Id == trackId)
                 ?? throw new NotFoundException(
                     "Track does not exist.",
                     ApiHelper.ErrorCodes.RESOURCE_NOT_FOUND);
-            await _trackRepository.DeleteAsync(track);
-            await _trackRepository.SaveToDatabaseAsync();
+            var segmentAudioUrls = await _segmentRepository.GetAllAsync(
+                e => e.TrackId == trackId,
+                e => e.AudioUrl);
+
+
+            // Remove all data in cloud
+            bool issuccess = await _storageService.RemoveAudio(track.FullAudioUrl);
+            foreach (var url in segmentAudioUrls)
+            {
+                await _storageService.RemoveAudio(url);
+            }
+
 
             // Update remaining track order
             var remainingTracks = (await _trackRepository.GetAllAsync(
-                e => e.SessionId == track.SessionId,
-                sortBy: e => e.OrderInSession)).ToArray();
-            for (int i = 0; i < remainingTracks.Length; i++)
+                e => e.SessionId == track.SessionId && e.OrderInSession > track.OrderInSession));
+            foreach (var t in remainingTracks)
             {
                 await _trackRepository.UpdateAsync(
-                    remainingTracks[i], 
-                    e => e.OrderInSession = i + 1);
+                    t, 
+                    e => e.OrderInSession = e.OrderInSession - 1);
             }
-            await _trackRepository.SaveToDatabaseAsync();
 
+            await _trackRepository.DeleteAsync(track);
+            await _trackRepository.SaveToDatabaseAsync();
             return new ApiResult<DeleteResponseDto>
             {
                 Message = "Delete successfully.",
@@ -282,27 +168,33 @@ namespace Core.Modules.ListeningModule.Services
             };
         }
 
-        public async Task<ApiResult<TrackContentDto>> GetTrackContent(int trackId)
+        public async Task<ApiResult<TrackDto>> GetTrackContent(int trackId)
         {
-            return new ApiResult<TrackContentDto>
+            return new ApiResult<TrackDto>
             {
                 Data = await _trackRepository.FindAsync(
                     e => e.Id == trackId,
-                    e => new TrackContentDto
+                    e => new TrackDto
                     {
                         Id = e.Id,
                         Name = e.Name,
                         FullAudioUrl = e.FullAudioUrl,
                         FullAudioTranscript = e.FullAudioTranscript,
                         FullAudioDuration = e.FullAudioDuration,
-                        Segments = e.Segments.Select(e => new SegmentInTrackDto
+                        Segments = e.Segments.Select(s => new SegmentDto
                         {
-                            Id = e.Id,
-                            AudioUrl = e.AudioUrl,
-                            Transcript = e.Transcript,
-                            OrderInTrack = e.OrderInTrack,
-                            SegmentDuration = e.Duration,
-                        }).ToList()
+                            Id = s.Id,
+                            AudioUrl = s.AudioUrl,
+                            Transcript = s.Transcript,
+                            OrderInTrack = s.OrderInTrack,
+                            SegmentDuration = TimeSpan.FromSeconds(s.EndSec - s.StartSec),
+                            StartSec = s.StartSec,
+                            EndSec = s.EndSec,
+                            UpdatedAt = s.UpdatedAt,
+                            CreatedAt = s.CreatedAt,
+                        }).ToList(),
+                        UpdatedAt = e.UpdatedAt,
+                        CreatedAt = e.CreatedAt,
                     })
                     ?? throw new NotFoundException(
                         "Track does not exist.",
@@ -325,9 +217,100 @@ namespace Core.Modules.ListeningModule.Services
             };
         }
 
-        public Task<ApiResult<UpdateResponseDto>> UpdateTrack(int trackId, CreateTrackDto track)
+        public async Task<ApiResult<UpdateResponseDto>> UpdateTrack(int trackId, UpdateTrackDto request)
         {
-            throw new NotImplementedException();
+            // Checking
+            if (request.Segments.Count == 0)
+            {
+                throw new BadRequestException(
+                    "The seg array must contain at least one element.");
+            }
+
+            // Update track info
+            var track = await _trackRepository.FindAsync(e => e.Id == trackId)
+                ?? throw new NotFoundException(
+                    "Track does not exist.",
+                    ApiHelper.ErrorCodes.RESOURCE_NOT_FOUND);
+            track.Name = request.Name;
+            track.FullAudioTranscript = request.FullTranscript;
+            track.UpdatedAt = DateTime.UtcNow;
+
+            // Prepare for update segment
+            var segments = await _segmentRepository.GetAllAsync(e => e.TrackId == trackId);
+            var updatedSegments = request.Segments
+                .Where(e => e.Id != null)
+                .ToDictionary(e => e.Id!.Value);
+            using var audioHandler = new AudioHandler();
+            await audioHandler.InitializeAsync(track.FullAudioUrl);
+
+            // Update existed segment in track (reinit audio file or remove segment as needed)
+            foreach (var seg in segments)
+            {
+                // Update when found
+                if (updatedSegments.TryGetValue(seg.Id, out var updatedSegment))
+                {
+                    // Update audio when time line change
+                    string? newAudioUrl = null;
+                    if (updatedSegment.StartSec != seg.StartSec || updatedSegment.EndSec != seg.EndSec)
+                    {
+                        using var newAudioStream = new MemoryStream();
+                        await audioHandler.Cut(
+                                (double)updatedSegment.StartSec,
+                                (double)updatedSegment.EndSec, newAudioStream);
+                        await _storageService.RemoveAudio(seg.AudioUrl);
+                        newAudioUrl = await _storageService.SaveAudio(newAudioStream)
+                            ?? throw new ServerErrorException("Failed to upload segment audio file.");
+                    }
+                    await _segmentRepository.UpdateAsync(seg, seg =>
+                    {
+                        seg.UpdatedAt = DateTime.UtcNow;
+                        seg.Transcript = updatedSegment.Transcript;
+                        seg.OrderInTrack = updatedSegment.OrderInTrack;
+                        seg.AudioUrl = newAudioUrl ?? seg.AudioUrl;
+                        seg.StartSec = updatedSegment.StartSec;
+                        seg.EndSec = updatedSegment.EndSec;
+                    });
+                }
+                // Delete when not found
+                else
+                {
+                    await _storageService.RemoveAudio(seg.AudioUrl);
+                    await _segmentRepository.DeleteAsync(seg);
+                }
+            }
+
+            // Create new segment if it's id is null
+            var newSegments = new List<Segment>();
+            foreach (var seg in request.Segments.Where(e => e.Id is null))
+            {
+                using var resultStream = new MemoryStream();
+                await audioHandler.Cut((double)seg.StartSec,(double)seg.EndSec, resultStream);
+                newSegments.Add(new()
+                {
+                    StartSec = seg.StartSec,
+                    EndSec = seg.EndSec,
+                    AudioUrl = await _storageService.SaveAudio(resultStream)
+                        ?? throw new ServerErrorException("Failed to upload segment audio file."),
+                    CreatedAt = DateTime.UtcNow,
+                    OrderInTrack = seg.OrderInTrack,
+                    Transcript = seg.Transcript,
+                    UpdatedAt = DateTime.UtcNow,
+                    TrackId = track.Id,
+                });
+            }
+            await _segmentRepository.AddRangeAsync(newSegments);
+
+            // Complete
+            audioHandler.ClearAll();
+            await _trackRepository.SaveToDatabaseAsync();
+            return new ApiResult<UpdateResponseDto>
+            {
+                Message = "Update track successfully.",
+                Data = new UpdateResponseDto
+                {
+                    Id = track.Id,
+                }
+            };
         }
     }
 }

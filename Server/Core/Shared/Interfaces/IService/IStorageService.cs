@@ -9,6 +9,7 @@ namespace Core.Shared.Interfaces.IService
 {
     public interface IStorageService
     {
+        Task<bool> RemoveAudio(string audioUrl);
         Task<string> GetHtmlTemplate(string templateFileName);
         Task<string?> SaveImage(IFormFile file);
         Task<bool> RemoveImage(string imageUrl);

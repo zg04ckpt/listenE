@@ -1,9 +1,7 @@
 ﻿using Core.Modules.AuthModule.DTOs;
 using Core.Modules.AuthModule.Interfaces.IServices;
-using Core.Shared.DTOs;
-using Core.Shared.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.v1
@@ -61,6 +59,45 @@ namespace Api.Controllers.v1
         public async Task<IActionResult> Logout()
         {
             return await TryExecute(() => _authService.LogoutAsync());
+        }
+
+        [HttpGet("google/login")]
+        public IActionResult GoogleLogin([FromQuery] string returnUrl)
+        {
+            var props = new AuthenticationProperties
+            {
+                RedirectUri = Url.Action(nameof(GoogleLoginCallback), new
+                {
+                    returnUrl
+                }),
+                Items =
+                {
+                    { "prompt", "select_account" }
+                }
+            };
+            return Challenge(props, "Google");
+        }
+
+
+        [HttpGet("google/login/callback")]
+        public async Task<IActionResult> GoogleLoginCallback([FromQuery] string returnUrl)
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync("Google");
+            await _authService.GoogleLoginAsync(authenticateResult);
+            return Redirect(returnUrl);
+        }
+
+        [HttpGet("google/login/result")]
+        public async Task<IActionResult> GetGoogleLoginResult()
+        {
+            return await TryExecute(() => _authService.GetAuthDataAsync(User));
+        }
+        
+        
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetSystemRoles()
+        {
+            return await TryExecute(() => _authService.GetAllRolesAsync());
         }
     }
 }

@@ -150,20 +150,26 @@ namespace Core.Modules.ListeningModule.Services
                     "Topic does not exist.",
                     ApiHelper.ErrorCodes.RESOURCE_NOT_FOUND);
 
-            topic.Name = request.Name;
-            topic.Description = request.Description;
-            topic.UpdatedAt = DateTime.UtcNow;
-            
             // Update thumbnail by remove old image and save new one
+            string? newThumbnail = null;
             if (request.Thumbnail != null)
             {
                 if (!await _storageService.RemoveImage(topic.ThumbnailUrl))
                 {
                     throw new ServerErrorException("Failed to delete image from cloudinary");
                 }
-                topic.ThumbnailUrl = await _storageService.SaveImage(request.Thumbnail)
+                newThumbnail = await _storageService.SaveImage(request.Thumbnail)
                     ?? throw new ServerErrorException("Failed to upload image to cloudinary.");
             }
+            await _topicRepository.UpdateAsync(topic, t =>
+            {
+                t.Description = request.Description;
+                t.Level = request.Level;
+                t.Name = request.Name;
+                t.UpdatedAt = DateTime.UtcNow;
+                t.ThumbnailUrl = newThumbnail ?? t.ThumbnailUrl;
+            });
+            await _topicRepository.SaveToDatabaseAsync();
 
             return new ApiResult<UpdateResponseDto>
             {

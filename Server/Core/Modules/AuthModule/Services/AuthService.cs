@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System;
 using System.Security.Claims;
 
 namespace Core.Modules.AuthModule.Services
@@ -87,6 +89,102 @@ namespace Core.Modules.AuthModule.Services
                 Message = "Confirm email successfully.",
                 Data = null
             };
+        }
+
+        public async Task<ApiResult<RoleListItemDto[]>> GetAllRolesAsync()
+        {
+            return new ApiResult<RoleListItemDto[]>
+            {
+                Data = (await _roleRepository.GetAllAsync(
+                    e => true,
+                    projection: e => new RoleListItemDto
+                    {
+                        Id = e.Id,
+                        Name = e.Name,
+                    })).ToArray()
+            };
+        }
+
+        public async Task<ApiResult<LoginResponseDto>> GetAuthDataAsync(ClaimsPrincipal claimsPrincipal)
+        {
+            var userId = Helper.GetUserIdFromClaims(claimsPrincipal);
+            var result = await _userRepository.FindAsync(
+                e => e.Id == userId,
+                e => new LoginResponseDto
+                {
+                    Email = e.Email,
+                    FirstName = e.FirstName,
+                    LastName = e.LastName,
+                    ImageUrl = e.ImageUrl
+                })
+                ?? throw new UnauthorizedException(
+                    $"User does not exist.",
+                    ApiHelper.ErrorCodes.USER_NOT_FOUND);
+
+            return new ApiResult<LoginResponseDto>
+            {
+                Data = result
+            };
+        }
+
+        public async Task GoogleLoginAsync(AuthenticateResult? data)
+        {
+            if (data is null || !data.Succeeded)
+            {
+                throw new BadRequestException("Xác thực thất bại");
+            }
+
+            // Get email and check if there is already an user with this email
+            // If no exist => create new user, else => update lastLogin
+            var googleClaims = data.Principal.Claims;
+            var email = googleClaims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value
+                ?? throw new BadRequestException("Thông tin xác thực không hợp lệ.");
+            var user = await _userRepository.FindAsync(e => e.Email == email);
+            if (user is null)
+            {
+                user = new User
+                {
+                    ImageUrl = googleClaims.FirstOrDefault(e => e.Type == "image")?.Value ?? _defaultValues.DefaultImageUrl,
+                    FirstName = googleClaims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value ?? "Ẩn danh",
+                    LastName = googleClaims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value ?? "",
+                    Email = email,
+                    PasswordHash = PasswordHasher.Hash(Guid.NewGuid().ToString()),
+                    IsEmailConfirmed = true,
+                    IsActivated = true,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    LastLogin = DateTime.UtcNow,
+                };
+                await _userRepository.AddAsync(user);
+                await _userRepository.SaveToDatabaseAsync();
+            }
+            else
+            {
+                await _userRepository.UpdateAsync(user, user => user.LastLogin = DateTime.UtcNow);
+                await _userRepository.SaveToDatabaseAsync();
+            }
+
+            // Prepare info for cookie
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            };
+            var roleNames = await _userRoleRepository.GetAllAsync<string>(
+                ur => ur.UserId == user.Id,
+                ur => ur.Role.Name);
+            claims.AddRange(roleNames.Select(e => new Claim(ClaimTypes.Role, e)));
+            var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(_cookieConfiguration.LongExpiresInDays)
+            };
+
+            // Login with cookie
+            await _contextAccessor.HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimIdentity),
+                authProperties);
         }
 
         public async Task<ApiResult<LoginResponseDto>> LoginAsync(LoginRequestDto request)

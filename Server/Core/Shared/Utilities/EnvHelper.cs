@@ -10,6 +10,15 @@ namespace Core.Shared.Utilities
 {
     public class EnvHelper
     {
+        public static string GetGoogleClientId()
+        {
+            return Environment.GetEnvironmentVariable("GoogleClientId")!;
+        }
+        public static string GetGoogleClientSecret()
+        {
+            return Environment.GetEnvironmentVariable("GoogleClientSecret")!;
+        }
+
         public static string GetMySQLConnectionString()
         {
             return Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING")

@@ -1,4 +1,4 @@
-﻿using Core.Modules.ListeningModule.DTOs.Segment;
+﻿using Core.Modules.UserModule.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,15 +7,17 @@ using System.Threading.Tasks;
 
 namespace Core.Modules.ListeningModule.DTOs.Track
 {
-    public class TrackDto
+    public class TrackCreateResponseDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string FullAudioTranscript { get; set; }
         public string FullAudioUrl { get; set; }
+        public string FullAudioTranscript { get; set; }
         public TimeSpan FullAudioDuration { get; set; }
-        public List<SegmentDto> Segments { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public int OrderInSession { get; set; }
+        public int SegmentCount { get; set; }
+        public int SessionId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

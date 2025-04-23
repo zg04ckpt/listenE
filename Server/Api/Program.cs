@@ -21,6 +21,8 @@ using StackExchange.Redis;
 using Api.Middlewares;
 using Core.Modules.ListeningModule.Interfaces;
 using Core.Modules.ListeningModule.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,12 +75,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddSingleton<IStorageService, StorageService>();
 builder.Services.AddSingleton<IMailService, MailService>();
-builder.Services.AddSingleton<IAudioConvertService, AudioConvertService>();
 
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<ITopicService, TopicService>();
 builder.Services.AddTransient<ISessionService, SessionService>();
 builder.Services.AddTransient<ITrackService, TrackService>();
+builder.Services.AddTransient<ISegmentService, SegmentService>();
 #endregion
 
 #region Add middlewares
@@ -111,6 +113,19 @@ builder.Services.AddAuthentication(options =>
         options.Events.OnRedirectToAccessDenied = context =>
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    })
+    .AddGoogle("Google", options =>
+    {
+        options.ClientId = EnvHelper.GetGoogleClientId();
+        options.ClientSecret = EnvHelper.GetGoogleClientSecret();
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.ClaimActions.MapJsonKey("image", "picture");
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.RedirectUri = context.RedirectUri.Replace("http://", "https://");
+            context.HttpContext.Response.Redirect(context.RedirectUri);
             return Task.CompletedTask;
         };
     });
@@ -172,7 +187,16 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
+// Fix bug redirect_uri (gg auth) not correct, that cause by nginx redirect from https => http
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+app.UseForwardedHeaders();
 app.UseCors("AllowAllClients");
 if (app.Environment.IsDevelopment())
 {

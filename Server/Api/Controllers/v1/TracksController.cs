@@ -1,4 +1,5 @@
-﻿using Core.Modules.ListeningModule.Interfaces;
+﻿using Core.Modules.ListeningModule.DTOs.Track;
+using Core.Modules.ListeningModule.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,15 +21,18 @@ namespace Api.Controllers.v1
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetContent(int id)
         {
             return await TryExecute(() => _trackService.GetTrackContent(id));
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateTrackDto request)
+        {
+            return await TryExecute(() => _trackService.UpdateTrack(id, request));
+        }
 
         [HttpDelete("{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> Delete(int id)
         {
             return await TryExecute(() => _trackService.DeleteTrack(id));

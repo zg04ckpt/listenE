@@ -7,7 +7,8 @@ namespace Core.Modules.ListeningModule.Entities
         public string Transcript { get; set; }
         public string AudioUrl { get; set; }
         public int OrderInTrack { get; set; }
-        public TimeSpan Duration { get; set; }
+        public double StartSec { get; set; }
+        public double EndSec { get; set; }
         public int TrackId { get; set; }
 
         // Rela

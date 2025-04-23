@@ -8,4 +8,8 @@ using System.Threading.Tasks;
 
 namespace Core.Modules.ListeningModule.Interfaces
 {
+    public interface ISegmentService
+    {
+        Task<ApiResult<CheckSegmentResultDto>> CheckSegment(int segmentID, CheckSegmentDto request);
+    }
 }

@@ -11,18 +11,21 @@ namespace Api.Controllers.v1
     public class SegmentsController : BaseApiController
     {
         private readonly ITrackService _trackService;
+        private readonly ISegmentService _segmentService;
 
         public SegmentsController(
-            ILogger<SegmentsController> logger, 
-            ITrackService trackService) : base(logger)
+            ILogger<SegmentsController> logger,
+            ITrackService trackService,
+            ISegmentService segmentService) : base(logger)
         {
             _trackService = trackService;
+            _segmentService = segmentService;
         }
 
         [HttpPost("{id}/checking")]
-        public async Task<IActionResult> CheckSegment(int id, [FromBody] CheckSegmentCorrectDto request)
+        public async Task<IActionResult> CheckSegment(int id, [FromBody] CheckSegmentDto request)
         {
-            return await TryExecute(() => _trackService.CheckSegment(id, request));
+            return await TryExecute(() => _segmentService.CheckSegment(id, request));
         }
     }
 }

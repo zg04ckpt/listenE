@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Core.Modules.ListeningModule.DTOs.Segment
 {
-    public class CheckSegmentCorrectDto
+    public class CheckSegmentDto
     {
         [Required(ErrorMessage = "The {0} field is required")]
         public string Content { get; set; }

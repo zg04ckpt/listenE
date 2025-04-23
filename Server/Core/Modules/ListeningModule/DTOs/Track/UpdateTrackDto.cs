@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Core.Modules.ListeningModule.DTOs.Segment;
+using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace Core.Modules.ListeningModule.DTOs.Track
 {
-    public class UpdateTrackDto 
+    public class UpdateTrackDto
     {
+        [Required(ErrorMessage = "The {0} field is required")]
+        [MaxLength(255, ErrorMessage = "The {0} field must not exceed {1} characters.")]
         public string Name { get; set; }
-        public string FullAudioUrl { get; set; }
-        public string FullAudioTranscript { get; set; }
-        public TimeSpan FullAudioDuration { get; set; }
-        public int OrderInSession { get; set; }
-        public int SessionId { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+
+        [Required(ErrorMessage = "The {0} field is required")]
+        public string FullTranscript { get; set; }
+        public List<UpdateSegmentDto> Segments { get; set; }
     }
 }

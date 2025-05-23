@@ -1,5 +1,5 @@
-﻿using Core.Modules.AuthModule.DTOs;
-using Core.Modules.AuthModule.Interfaces.IServices;
+﻿using Core.Modules.Auth.DTOs.Auth;
+using Core.Modules.Auth.Interfaces.IServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -91,13 +91,6 @@ namespace Api.Controllers.v1
         public async Task<IActionResult> GetGoogleLoginResult()
         {
             return await TryExecute(() => _authService.GetAuthDataAsync(User));
-        }
-        
-        
-        [HttpGet("roles")]
-        public async Task<IActionResult> GetSystemRoles()
-        {
-            return await TryExecute(() => _authService.GetAllRolesAsync());
         }
     }
 }

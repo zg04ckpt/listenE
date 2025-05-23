@@ -19,7 +19,7 @@ namespace Data.Migrations
                 .HasAnnotation("ProductVersion", "6.0.36")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.Role", b =>
+            modelBuilder.Entity("Core.Modules.Auth.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -40,7 +40,7 @@ namespace Data.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.User", b =>
+            modelBuilder.Entity("Core.Modules.Auth.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -89,7 +89,7 @@ namespace Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.UserRole", b =>
+            modelBuilder.Entity("Core.Modules.Auth.Entities.UserRole", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -104,79 +104,7 @@ namespace Data.Migrations
                     b.ToTable("UserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.ChallengeModule.Entities.Challenge", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("AudioUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(2048)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(2048)");
-
-                    b.Property<string>("Transcript")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("WordCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Challenges", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.ChallengeModule.Entities.ChallengeHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("ChallengeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CorrectWordCount")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time(6)");
-
-                    b.Property<int>("TotalWordCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChallengeId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ChallengeHistories", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Segment", b =>
+            modelBuilder.Entity("Core.Modules.BasicListening.Entities.Segment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -215,70 +143,7 @@ namespace Data.Migrations
                     b.ToTable("Segments", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Session", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int>("OrderInTopic")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TopicId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TopicId");
-
-                    b.ToTable("Sessions", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Topic", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(2048)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Topics", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Track", b =>
+            modelBuilder.Entity("Core.Modules.BasicListening.Entities.Track", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,10 +167,7 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<int>("OrderInSession")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SessionId")
+                    b.Property<int>("Order")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -313,12 +175,10 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
-
                     b.ToTable("Tracks", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.Comment", b =>
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicAnswer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -326,120 +186,185 @@ namespace Data.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("Key")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("ToeicAnswers", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("AudioUrl")
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<int>("CorrectAnswerKey")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("TrackId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrackId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.DailyListenStats", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("CorrectWordCount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("FullSegmentCorrectCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IncorrectWordCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SegmentCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Date");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DailyListenStats", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.FavouriteTrack", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TrackId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SavedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("UserId", "TrackId");
-
-                    b.HasIndex("TrackId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FavouriteTracks", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.TrackHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Progress")
+                    b.Property<string>("Explanation")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("StartedAt")
+                    b.Property<int?>("GroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<string>("StringQuestion")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Transcript")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("TrackId")
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("ToeicQuestions", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestionGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("AudioUrl")
+                        .IsRequired()
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Transcript")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("ToeicQuestionGroups", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestionTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ToeicQuestionTags", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Modules.UserFeatures.Entities.CompletedQuestion", b =>
+                {
+                    b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.HasIndex("TrackId");
+                    b.HasKey("QuestionId", "UserId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TrackHistories", (string)null);
+                    b.ToTable("CompletedQuestions", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.UserRole", b =>
+            modelBuilder.Entity("Core.Shared.Entities.Topic", b =>
                 {
-                    b.HasOne("Core.Modules.AuthModule.Entities.Role", "Role")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Topics", (string)null);
+                });
+
+            modelBuilder.Entity("Core.Modules.Auth.Entities.UserRole", b =>
+                {
+                    b.HasOne("Core.Modules.Auth.Entities.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
+                    b.HasOne("Core.Modules.Auth.Entities.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -450,28 +375,9 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Core.Modules.ChallengeModule.Entities.ChallengeHistory", b =>
+            modelBuilder.Entity("Core.Modules.BasicListening.Entities.Segment", b =>
                 {
-                    b.HasOne("Core.Modules.ChallengeModule.Entities.Challenge", "Challenge")
-                        .WithMany("ChallengeHistories")
-                        .HasForeignKey("ChallengeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
-                        .WithMany("ChallengeHistories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Challenge");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Segment", b =>
-                {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Track", "Track")
+                    b.HasOne("Core.Modules.BasicListening.Entities.Track", "Track")
                         .WithMany("Segments")
                         .HasForeignKey("TrackId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -480,140 +386,99 @@ namespace Data.Migrations
                     b.Navigation("Track");
                 });
 
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Session", b =>
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicAnswer", b =>
                 {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Topic", "Topic")
-                        .WithMany("Sessions")
-                        .HasForeignKey("TopicId")
+                    b.HasOne("Core.Modules.ToeicPractice.Entities.ToeicQuestion", "Question")
+                        .WithMany("Answers")
+                        .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Topic");
+                    b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Track", b =>
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestion", b =>
                 {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Session", "Session")
-                        .WithMany("Tracks")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Core.Modules.ToeicPractice.Entities.ToeicQuestionGroup", "Group")
+                        .WithMany("Questions")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Core.Modules.ToeicPractice.Entities.ToeicQuestionTag", "Tag")
+                        .WithMany("Questions")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Session");
+                    b.Navigation("Group");
+
+                    b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.Comment", b =>
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestionGroup", b =>
                 {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Track", "Track")
-                        .WithMany("Comments")
-                        .HasForeignKey("TrackId")
+                    b.HasOne("Core.Modules.ToeicPractice.Entities.ToeicQuestionTag", "Tag")
+                        .WithMany("QuestionGroups")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("Core.Modules.UserFeatures.Entities.CompletedQuestion", b =>
+                {
+                    b.HasOne("Core.Modules.ToeicPractice.Entities.ToeicQuestion", "Question")
+                        .WithMany("CompletedQuestions")
+                        .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
-                        .WithMany("Comments")
+                    b.HasOne("Core.Modules.Auth.Entities.User", "User")
+                        .WithMany("CompletedQuestions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Track");
+                    b.Navigation("Question");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.DailyListenStats", b =>
-                {
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
-                        .WithMany("DailyListenStats")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.FavouriteTrack", b =>
-                {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Track", "Track")
-                        .WithMany("FavouriteTracks")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
-                        .WithMany("FavouriteTracks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Track");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Core.Modules.UserModule.Entities.TrackHistory", b =>
-                {
-                    b.HasOne("Core.Modules.ListeningModule.Entities.Track", "Track")
-                        .WithMany("TrackHistories")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Modules.AuthModule.Entities.User", "User")
-                        .WithMany("TrackHistories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Track");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.Role", b =>
+            modelBuilder.Entity("Core.Modules.Auth.Entities.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Core.Modules.AuthModule.Entities.User", b =>
+            modelBuilder.Entity("Core.Modules.Auth.Entities.User", b =>
                 {
-                    b.Navigation("ChallengeHistories");
-
-                    b.Navigation("Comments");
-
-                    b.Navigation("DailyListenStats");
-
-                    b.Navigation("FavouriteTracks");
-
-                    b.Navigation("TrackHistories");
+                    b.Navigation("CompletedQuestions");
 
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Core.Modules.ChallengeModule.Entities.Challenge", b =>
+            modelBuilder.Entity("Core.Modules.BasicListening.Entities.Track", b =>
                 {
-                    b.Navigation("ChallengeHistories");
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Session", b =>
-                {
-                    b.Navigation("Tracks");
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Topic", b =>
-                {
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("Core.Modules.ListeningModule.Entities.Track", b =>
-                {
-                    b.Navigation("Comments");
-
-                    b.Navigation("FavouriteTracks");
-
                     b.Navigation("Segments");
+                });
 
-                    b.Navigation("TrackHistories");
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestion", b =>
+                {
+                    b.Navigation("Answers");
+
+                    b.Navigation("CompletedQuestions");
+                });
+
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestionGroup", b =>
+                {
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Core.Modules.ToeicPractice.Entities.ToeicQuestionTag", b =>
+                {
+                    b.Navigation("QuestionGroups");
+
+                    b.Navigation("Questions");
                 });
 #pragma warning restore 612, 618
         }

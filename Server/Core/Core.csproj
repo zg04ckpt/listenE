@@ -19,9 +19,4 @@
 	 <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\AuthModule\Interfaces\IRepositories\" />
-    <Folder Include="Shared\Enums\" />
-  </ItemGroup>
-
 </Project>

@@ -1,8 +1,8 @@
-﻿using Core.Modules.ListeningModule.Entities;
+﻿using Core.Modules.BasicListening.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Data.EntityConfigurations.ListeningModule
+namespace Data.EntityConfigurations.BasicListening
 {
     public class SegmentConfiguration : IEntityTypeConfiguration<Segment>
     {

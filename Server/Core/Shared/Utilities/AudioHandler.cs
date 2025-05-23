@@ -1,5 +1,5 @@
 ﻿
-using Core.Modules.ListeningModule.Entities;
+using Core.Modules.BasicListening.Entities;
 using Core.Shared.Exceptions;
 using Microsoft.AspNetCore.Http;
 using NAudio.Lame;

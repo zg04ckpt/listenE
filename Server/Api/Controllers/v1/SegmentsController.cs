@@ -1,6 +1,5 @@
-﻿using Core.Modules.ListeningModule.DTOs.Segment;
-using Core.Modules.ListeningModule.Interfaces;
-using Microsoft.AspNetCore.Http;
+﻿using Core.Modules.BasicListening.DTOs.Segment;
+using Core.Modules.BasicListening.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.v1
@@ -11,21 +10,18 @@ namespace Api.Controllers.v1
     public class SegmentsController : BaseApiController
     {
         private readonly ITrackService _trackService;
-        private readonly ISegmentService _segmentService;
 
         public SegmentsController(
             ILogger<SegmentsController> logger,
-            ITrackService trackService,
-            ISegmentService segmentService) : base(logger)
+            ITrackService trackService) : base(logger)
         {
             _trackService = trackService;
-            _segmentService = segmentService;
         }
 
         [HttpPost("{id}/checking")]
         public async Task<IActionResult> CheckSegment(int id, [FromBody] CheckSegmentDto request)
         {
-            return await TryExecute(() => _segmentService.CheckSegment(id, request));
+            return await TryExecute(() => _trackService.CheckSegment(id, request));
         }
     }
 }

@@ -1,7 +1,7 @@
-﻿using Core.Modules.AuthModule.Configurations;
-using Core.Modules.AuthModule.Entities;
-using Core.Modules.AuthModule.Interfaces.IServices;
-using Core.Modules.AuthModule.Services;
+﻿using Core.Modules.Auth.Configurations;
+using Core.Modules.Auth.Entities;
+using Core.Modules.Auth.Interfaces.IServices;
+using Core.Modules.Auth.Services;
 using Core.Shared.DTOs;
 using Core.Shared.Utilities;
 using Data;
@@ -19,10 +19,17 @@ using Core.Shared.Interfaces.IService;
 using Core.Shared.Services;
 using StackExchange.Redis;
 using Api.Middlewares;
-using Core.Modules.ListeningModule.Interfaces;
-using Core.Modules.ListeningModule.Services;
+using Core.Modules.BasicListening.Interfaces;
+using Core.Modules.BasicListening.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
+using Core.Modules.ToeicPractice.Interfaces.IService;
+using Core.Modules.ToeicPractice.Services;
+using Core.Modules.ToeicPractice.Interfaces.IRepository;
+using Core.Modules.UserModule.Interfaces.IRepositories;
+using Core.Modules.UserModule.Interfaces.IServices;
+using Core.Modules.UserModule.Services;
+using System.Security.Claims;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,6 +74,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 
 #region Add repositories
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped<IUserRepository,  UserRepository>();
+builder.Services.AddScoped<IQuestionGroupRepository, QuestionGroupRepository>();
 #endregion
 
 #region Add services
@@ -78,9 +87,11 @@ builder.Services.AddSingleton<IMailService, MailService>();
 
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<ITopicService, TopicService>();
-builder.Services.AddTransient<ISessionService, SessionService>();
 builder.Services.AddTransient<ITrackService, TrackService>();
 builder.Services.AddTransient<ISegmentService, SegmentService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IToeicQuestionService, ToeicQuestionService>();
+builder.Services.AddTransient<IToeicQuestionTagService, ToeicQuestionTagService>();
 #endregion
 
 #region Add middlewares
@@ -145,7 +156,7 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true;
 });
 
-// Controller
+// Controller name
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -195,6 +206,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+// Add authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("OnlyAdmin", policy => policy.RequireClaim(ClaimTypes.Role, "Admin"));
+    options.AddPolicy("OnlyManager", policy => policy.RequireClaim(ClaimTypes.Role, "Manager"));
+});
+
 var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseCors("AllowAllClients");
@@ -216,10 +234,6 @@ app.MapControllers();
 
 // Seed data
 using var scope = app.Services.CreateScope();
-await Seeder.SeedData(
-    scope.ServiceProvider.GetRequiredService<AppDbContext>(),
-    scope.ServiceProvider.GetRequiredService<IBaseRepository<User>>(),
-    scope.ServiceProvider.GetRequiredService<IBaseRepository<Core.Modules.AuthModule.Entities.Role>>(),
-    scope.ServiceProvider.GetRequiredService<IBaseRepository<UserRole>>());
+await Seeder.SeedData(scope.ServiceProvider.GetRequiredService<AppDbContext>());
 
 app.Run();

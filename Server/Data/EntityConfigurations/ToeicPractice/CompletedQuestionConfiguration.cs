@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Data.EntityConfigurations.UserModule
+namespace Data.EntityConfigurations.ToeicPractice
 {
     public class CompletedQuestionConfiguration : IEntityTypeConfiguration<CompletedQuestion>
     {

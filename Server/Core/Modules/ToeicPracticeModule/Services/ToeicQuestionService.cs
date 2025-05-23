@@ -72,7 +72,11 @@ namespace Core.Modules.ToeicPractice.Services
 
             // Mark completed
             var userId = Helper.GetUserIdFromClaims(claims);
-            if (userId != null && await _userRepository.ExistsAsync(e => e.Id == userId))
+            if (
+                userId != null && 
+                await _userRepository.ExistsAsync(e => e.Id == userId) &&
+                !await _completedQuesRepository.ExistsAsync(e => 
+                    e.UserId == userId && e.QuestionId == questionId))
             {
                 await _completedQuesRepository.AddAsync(new CompletedQuestion
                 {

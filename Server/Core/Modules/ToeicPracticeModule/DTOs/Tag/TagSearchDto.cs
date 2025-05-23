@@ -10,5 +10,7 @@ namespace Core.Modules.ToeicPractice.DTOs.Tag
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ToeicPartType? Type { get; set; }
+
+        public string? Name { get; set; }
     }
 }

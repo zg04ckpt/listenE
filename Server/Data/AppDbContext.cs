@@ -7,7 +7,6 @@ using Data.EntityConfigurations;
 using Data.EntityConfigurations.Auth;
 using Data.EntityConfigurations.BasicListening;
 using Data.EntityConfigurations.ToeicPractice;
-using Data.EntityConfigurations.UserModule;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data

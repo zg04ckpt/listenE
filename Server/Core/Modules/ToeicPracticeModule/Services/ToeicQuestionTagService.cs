@@ -77,6 +77,11 @@ namespace Core.Modules.ToeicPractice.Services
             {
                 predicateBuilder.AndCondition(e => e.Type == data.Type);
             }
+            if (data.Name != null)
+            {
+                predicateBuilder.AndCondition(e => e.Name.Contains(data.Name));
+            }
+
             return new ApiResult<Paginated<ToeicQuestionTagListItemDto>>
             {
                 Data = (await _tagRepository.GetPaginatedAsync(

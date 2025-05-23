@@ -8,3 +8,4 @@
 **/Temp
 docker-compose.development.yaml
 docker-compose.production.yaml
+docker-compose.demo.yaml

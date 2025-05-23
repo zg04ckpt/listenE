@@ -21,31 +21,31 @@ namespace Data
             // Create default roles and user
             try
             {
+                var roles = new Role[]
+                {
+                    new Role
+                    {
+                        Name = "Admin",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    },
+                    new Role
+                    {
+                        Name = "User",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    },
+                    new Role
+                    {
+                        Name = "Manager",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    },
+                };
+
                 if (!await _context.Roles.AnyAsync())
                 {
-                    var roles = new Role[] 
-                    { 
-                        new Role
-                        {
-                            Name = "Admin",
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        },
-                        new Role
-                        {
-                            Name = "User",
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        },
-                        new Role
-                        {
-                            Name = "Manager",
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        },
-                    };
                     await _context.AddRangeAsync(roles);
-
                 }
 
                 if (!await _context.Users.AnyAsync())
@@ -83,12 +83,12 @@ namespace Data
                     await _context.UserRoles.AddAsync(new UserRole()
                     {
                         User = admin,
-                        Role = _context.Roles.First(e => e.Name == "Admin")
+                        Role = roles.First(e => e.Name == "Admin")
                     });
                     await _context.UserRoles.AddAsync(new UserRole()
                     {
                         User = manager,
-                        Role = _context.Roles.First(e => e.Name == "Manager")
+                        Role = roles.First(e => e.Name == "Manager")
                     });
                 }
 

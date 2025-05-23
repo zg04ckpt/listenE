@@ -1,5 +1,4 @@
 ﻿using Core.Modules.Auth.Configurations;
-using Core.Modules.Auth.Entities;
 using Core.Modules.Auth.Interfaces.IServices;
 using Core.Modules.Auth.Services;
 using Core.Shared.DTOs;

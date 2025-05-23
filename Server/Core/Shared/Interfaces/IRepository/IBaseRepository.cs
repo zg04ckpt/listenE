@@ -26,7 +26,8 @@ namespace Core.Shared.Interfaces.IRepository
         /// Retrieves all entities that satisfy the given predicate condition.
         /// </summary>
         Task<IEnumerable<TEntity>> GetAllAsync(
-            Expression<Func<TEntity, bool>> predicate, 
+            Expression<Func<TEntity, bool>> predicate,
+            Expression<Func<TEntity, object>>? include = null,
             Expression<Func<TEntity, object>>? sortBy = null,
             bool isAsc = true);
 
@@ -86,6 +87,11 @@ namespace Core.Shared.Interfaces.IRepository
         /// Updates a single entity in the collection.
         /// </summary>
         Task UpdateAsync(TEntity entity, Action<TEntity> updateAction);
+
+        /// <summary>
+        /// Updates a single entity in the collection.
+        /// </summary>
+        Task UpdateAsync(TEntity entity);
 
         /// <summary>
         /// Deletes a single entity from the collection.

@@ -1,8 +1,8 @@
-﻿using Core.Modules.ListeningModule.Entities;
+﻿using Core.Modules.BasicListening.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Data.EntityConfigurations.ListeningModule
+namespace Data.EntityConfigurations.BasicListening
 {
     public class TrackConfiguration : IEntityTypeConfiguration<Track>
     {
@@ -13,13 +13,6 @@ namespace Data.EntityConfigurations.ListeningModule
             builder.Property(e => e.Name).HasColumnType("varchar(255)").IsRequired();
             builder.Property(e => e.FullAudioTranscript).HasColumnType("text").IsRequired();
             builder.Property(e => e.FullAudioUrl).HasColumnType("varchar(2048)").IsRequired();
-
-            builder.HasOne(t => t.Session)
-                .WithMany(s => s.Tracks)
-                .HasForeignKey(t => t.SessionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasIndex(e => e.SessionId);
         }
     }
 }

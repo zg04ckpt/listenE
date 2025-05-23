@@ -10,6 +10,17 @@ namespace Core.Shared.Utilities
 {
     public class EnvHelper
     {
+        public static string GetGoogleClientId()
+        {
+            return Environment.GetEnvironmentVariable("GoogleClientId")
+                ?? throw new EnvironmentVariableMissingException("The environment variable 'GoogleClientId' was not found.");
+        }
+        public static string GetGoogleClientSecret()
+        {
+            return Environment.GetEnvironmentVariable("GoogleClientSecret")
+                ?? throw new EnvironmentVariableMissingException("The environment variable 'GoogleClientSecret' was not found.");
+        }
+
         public static string GetMySQLConnectionString()
         {
             return Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING")

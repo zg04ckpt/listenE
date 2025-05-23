@@ -1,8 +1,8 @@
-﻿using Core.Modules.ListeningModule.Entities;
+﻿using Core.Modules.BasicListening.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Data.EntityConfigurations.ListeningModule
+namespace Data.EntityConfigurations.BasicListening
 {
     public class SegmentConfiguration : IEntityTypeConfiguration<Segment>
     {
@@ -10,6 +10,8 @@ namespace Data.EntityConfigurations.ListeningModule
         {
             builder.ToTable("Segments");
             builder.HasKey(e => e.Id);
+            builder.Property(e => e.StartSec).HasColumnType("decimal(10,2)");
+            builder.Property(e => e.EndSec).HasColumnType("decimal(10,2)");
             builder.Property(e => e.Transcript).HasColumnType("text").IsRequired();
             builder.Property(e => e.AudioUrl).HasColumnType("varchar(2028)").IsRequired();
 

@@ -40,6 +40,7 @@ namespace Core.Shared.Services
 
         public async Task<string?> SaveAudio(MemoryStream mp3Stream)
         {
+            mp3Stream.Seek(0, SeekOrigin.Begin);
             var uploadParam = new RawUploadParams
             {
                 Folder = "listene/audios",
@@ -52,6 +53,13 @@ namespace Core.Shared.Services
             }
             _logger.LogError(result.Error.Message);
             return null;
+        }
+
+        public async Task<bool> RemoveAudio(string audioUrl)
+        {
+            string publicId = "listene/audios/" + Path.GetFileName(audioUrl);
+            var result = await _cloudinary.DeleteResourcesAsync(ResourceType.Raw, publicId);
+            return result.StatusCode == System.Net.HttpStatusCode.OK;
         }
 
         public async Task<string?> SaveImage(IFormFile file)

@@ -1,4 +1,4 @@
-﻿using Core.Modules.AuthModule.Entities;
+﻿using Core.Modules.Auth.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Data.EntityConfigurations.AuthModule
+namespace Data.EntityConfigurations.Auth
 {
     public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     {

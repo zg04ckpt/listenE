@@ -90,6 +90,7 @@ namespace Data.Repositories
 
         public async Task<IEnumerable<TEntity>> GetAllAsync(
             Expression<Func<TEntity, bool>> predicate,
+            Expression<Func<TEntity, object>>? include = null,
             Expression<Func<TEntity, object>>? sortBy = null,
             bool isAsc = true)
         {
@@ -99,6 +100,10 @@ namespace Data.Repositories
                 if (isAsc) query = query.OrderBy(sortBy);
                 else query = query.OrderByDescending(sortBy);
             }
+            if (include != null)
+            {
+                query = query.Include(include);
+            }    
             return await query
                 .Where(predicate)
                 .ToListAsync();
@@ -215,6 +220,11 @@ namespace Data.Repositories
             }
 
             await Task.CompletedTask;
+        }
+        
+        public async Task UpdateAsync(TEntity entity)
+        {
+            _context.Set<TEntity>().Update(entity);
         }
     }
 }

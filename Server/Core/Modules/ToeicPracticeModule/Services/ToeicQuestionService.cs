@@ -262,7 +262,7 @@ namespace Core.Modules.ToeicPractice.Services
             {
                 answers.Add(new ToeicAnswer
                 {
-                    Content = data.Answers[i].Content,
+                    Content = data.Answers[i].Content ?? "",
                     Key = i + 1,
                     Question = question
                 });
@@ -375,13 +375,21 @@ namespace Core.Modules.ToeicPractice.Services
 
             // Mark
             var userId = Helper.GetUserIdFromClaims(claims);
-            if (userId != null && await _userRepository.ExistsAsync(e => e.Id == userId))
+            if (
+                userId != null && await _userRepository.ExistsAsync(e => e.Id == userId))
             {
-                await _completedQuesRepository.AddRangeAsync(groupKey.QuestionKeys.Select(q => new CompletedQuestion
+                foreach (var item in groupKey.QuestionKeys)
                 {
-                    UserId = userId.Value,
-                    QuestionId = q.QuestionId,
-                }));
+                    if (!await _completedQuesRepository.ExistsAsync(e =>
+                        e.UserId == userId && e.QuestionId == item.QuestionId))
+                    {
+                        await _completedQuesRepository.AddAsync(new CompletedQuestion
+                        {
+                            UserId = userId.Value,
+                            QuestionId = item.QuestionId,
+                        });
+                    }
+                }
                 await _completedQuesRepository.SaveToDatabaseAsync();
             }
 
@@ -465,7 +473,7 @@ namespace Core.Modules.ToeicPractice.Services
             {
                 answers.Add(new ToeicAnswer
                 {
-                    Content = data.Answers[i].Content,
+                    Content = data.Answers[i].Content ?? "",
                     Key = i + 1,
                     Question = question
                 });
@@ -612,7 +620,8 @@ namespace Core.Modules.ToeicPractice.Services
                 UpdatedAt = DateTime.UtcNow,
                 Answers = q.Answers.Select((a, i) => new ToeicAnswer
                 {
-                    Content = a.Content,
+                    Content = a.Content 
+                        ?? throw new BadRequestException("Answers of part 3,4 question cannot be empty"),
                     Key = (i + 1),
                 }).ToList(),
             }).ToList();

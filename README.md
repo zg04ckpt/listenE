@@ -3,9 +3,8 @@
 là nền tảng học tiếng Anh tập trung vào kỹ năng *nghe* thông qua phương pháp **Nghe – Chép**, giúp người học cải thiện khả năng nghe hiểu một cách chủ động và có hệ thống.
 
 ## 🎯 Mục Tiêu
-- Cung cấp nền tảng luyện nghe phân cấp rõ ràng (Topic → Session → Track → Segment).
-- Tự động chấm điểm nội dung nghe và kiểm tra lỗi sai từng từ.
-- Hỗ trợ người học luyện nghe hiệu quả với các công cụ như: lưu lịch sử, bài yêu thích, thống kê tiến trình, và thử thách hàng tuần.
+- Cung cấp nền tảng luyện nghe cơ bản theo từng từ.
+- Luyện tập với các dạng câu hỏi bài nghe toeic.
 
 ## 🚀 Công Nghệ Sử Dụng
 - **Frontend:** React + TypeScript, triển khai qua Vercel.

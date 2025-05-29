@@ -30,6 +30,7 @@ A web application designed to help users practice TOEIC listening skills through
    - **Email Service**: `[mailbot_email]`, `[mailbot_password]`
    - **Google OAuth**: `[google_client_id]`, `[google_client_secret]`
 5. Run the API (root folder):
+
    ```bash
    docker-compose -f docker-compose.yaml up -d
 
@@ -38,12 +39,17 @@ A web application designed to help users practice TOEIC listening skills through
 ## Web Setup
 1. Install **Node.js** (version 18 or higher).
 2. Navigate to the project root and install dependencies:
+
    ```bash
    npm install
+
 3. Create a .env file in the project root with the following:
+
     ```env
     VITE_HOST_API=http://localhost:[api_run_port]/api/v1
+
 4. Start the development server:
+
     ```bash
     npm run dev
 

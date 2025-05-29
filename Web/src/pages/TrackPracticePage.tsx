@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -34,7 +32,6 @@ import {
   Replay,
   VolumeUp,
   VolumeMute,
-  // Mic,
   Send,
   EmojiEvents,
   CheckCircle,
@@ -46,9 +43,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import type { ITrackReponseItem } from "../types/track";
 import { getDetailsTopic } from "../api/topic";
-import { getDetailsSession } from "../api/session";
+import { getDetailsTrack } from "../api/track";
 import type { ITopicItem } from "../types/topic";
-import type { ISessionItem } from "../types/session";
 
 interface CheckedWord {
   word: string;
@@ -67,28 +63,15 @@ interface ScoreResponse {
   correctTranscript: string;
 }
 
-const mockTracks: ITrackReponseItem = {
-  id: 1,
-  name: "Introducing Yourself",
-  fullAudioUrl:
-    "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",
-  fullAudioTranscript:
-    "Hi, my name is Sarah. I'm from Canada. It's nice to meet you. What's your name?",
-  fullAudioDuration: "00::00::36.6497959",
-  difficulty: "Easy",
-  segments: [],
-};
-
 const checkUserInput = async (
   segmentId: number,
-  content: string
+  content: string,
+  correctTranscript: string
 ): Promise<ScoreResponse> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const userWords = content.toLowerCase().split(/\s+/);
-      const correctWords = mockTracks.fullAudioTranscript
-        .toLowerCase()
-        .split(/\s+/);
+      const correctWords = correctTranscript.toLowerCase().split(/\s+/);
 
       const checkedWords: CheckedWord[] = [];
       let correctCount = 0;
@@ -123,17 +106,16 @@ const checkUserInput = async (
         correctRate,
         score: Math.round(correctRate),
         maxScore: 100,
-        correctTranscript: mockTracks.fullAudioTranscript,
+        correctTranscript: correctTranscript,
       });
     }, 1500);
   });
 };
 
 const TrackPracticePage = () => {
-  const { topicId, sessionId, trackId } = useParams();
+  const { topicId, trackId } = useParams();
   const navigate = useNavigate();
   const [topic, setTopic] = useState<ITopicItem | null>(null);
-  const [session, setSession] = useState<ISessionItem | null>(null);
   const [track, setTrack] = useState<ITrackReponseItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -153,38 +135,27 @@ const TrackPracticePage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleGetDetailsTrack = async (
-    topicId: number,
-    sessionId: number
-    // trackId: number
-  ) => {
+  const handleGetDetailsTrack = async (topicId: number, trackId: number) => {
     setLoading(true);
     try {
-      const [topicRes, sessionsRes] = await Promise.all([
+      const [topicRes, trackRes] = await Promise.all([
         getDetailsTopic(topicId),
-        getDetailsSession(sessionId),
-        // getDetailsTrack(trackId),
+        getDetailsTrack(trackId),
       ]);
 
       setTopic(topicRes?.data?.data);
-      setSession(sessionsRes?.data?.data);
-      // setTrack(tracksRes?.data?.data);
-      setTrack(mockTracks);
+      setTrack(trackRes?.data?.data);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (topicId && sessionId && trackId)
-      handleGetDetailsTrack(
-        Number(topicId),
-        Number(sessionId)
-        // Number(trackId)
-      );
-  }, [topicId, sessionId, trackId]);
+    if (topicId && trackId)
+      handleGetDetailsTrack(Number(topicId), Number(trackId));
+  }, [topicId, trackId]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -254,7 +225,11 @@ const TrackPracticePage = () => {
 
     setIsScoring(true);
     try {
-      const result = await checkUserInput(track.id, userInput);
+      const result = await checkUserInput(
+        track.id,
+        userInput,
+        track.fullAudioTranscript
+      );
       setScoreResult(result);
       setScore(result.score);
       setHasScored(true);
@@ -415,25 +390,13 @@ const TrackPracticePage = () => {
           >
             {topic?.name}
           </Link>
-          <Link
-            underline="hover"
-            color="inherit"
-            onClick={() =>
-              navigate(`/topic/${topic?.id}/session/${session?.id}`)
-            }
-            style={{ cursor: "pointer" }}
-          >
-            {session?.name}
-          </Link>
           <Typography color="text.primary">{track.name}</Typography>
         </Breadcrumbs>
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() =>
-              navigate(`/topic/${topic?.id}/session/${session?.id}`)
-            }
+            onClick={() => navigate(`/topic/${topic?.id}`)}
             sx={{ mr: 2 }}
           >
             Back
@@ -869,9 +832,7 @@ const TrackPracticePage = () => {
                       </Button>
                       <Button
                         variant="contained"
-                        onClick={() =>
-                          navigate(`/topic/${topic?.id}/session/${session?.id}`)
-                        }
+                        onClick={() => navigate(`/topic/${topic?.id}`)}
                       >
                         Next Exercise
                       </Button>
@@ -896,15 +857,13 @@ const TrackPracticePage = () => {
           </Button> */}
           <Button
             variant="outlined"
-            onClick={() =>
-              navigate(`/topic/${topic?.id}/session/${session?.id}`)
-            }
+            onClick={() => navigate(`/topic/${topic?.id}`)}
             sx={{
               transition: "all 0.2s ease",
               "&:hover": { transform: "translateY(-2px)" },
             }}
           >
-            Back to Session
+            Back to Topic
           </Button>
         </Box>
       </motion.div>
@@ -963,7 +922,7 @@ const TrackPracticePage = () => {
             variant="contained"
             onClick={() => {
               setShowSuccessDialog(false);
-              navigate(`/topic/${topic?.id}/session/${session?.id}`);
+              navigate(`/topic/${topic?.id}`);
             }}
             fullWidth
           >

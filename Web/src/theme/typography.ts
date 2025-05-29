@@ -1,8 +1,3 @@
-// import "@fontsource/public-sans";
-// import "@fontsource/barlow";
-
-// ----------------------------------------------------------------------
-
 export function remToPx(value: string) {
   return Math.round(parseFloat(value) * 16);
 }
@@ -33,16 +28,12 @@ export function responsiveFontSizes({
   };
 }
 
-// ----------------------------------------------------------------------
-
 declare module "@mui/material/styles" {
   interface TypographyVariants {
     fontSecondaryFamily: React.CSSProperties["fontFamily"];
     fontWeightSemiBold: React.CSSProperties["fontWeight"];
   }
 }
-
-// ----------------------------------------------------------------------
 
 export const typography = {
   fontFamily: "'Public Sans', sans-serif",

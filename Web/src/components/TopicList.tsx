@@ -1,6 +1,3 @@
-"use client";
-
-import type React from "react";
 import { useState, useEffect } from "react";
 import {
   Typography,
@@ -11,14 +8,12 @@ import {
   CardMedia,
   Button,
   Skeleton,
-  Chip,
   Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { ArrowForward, Bookmark, BookmarkBorder } from "@mui/icons-material";
+import { ArrowForward } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { ITopicItem } from "../types/topic";
-import IconButton from "./IconButton";
 import { getAllTopics } from "../api/topic";
 
 export type Props = {
@@ -52,17 +47,6 @@ export default function TopicList({
 
   const handleTopicClick = (topicId: number) => {
     navigate(`/topic/${topicId}`);
-  };
-
-  const toggleFavorite = (e: React.MouseEvent, topicId: number) => {
-    e.stopPropagation();
-    setTopics(
-      topics.map((topic) =>
-        topic.id === topicId
-          ? { ...topic, isFavorite: !topic.isFavorite }
-          : topic
-      )
-    );
   };
 
   const container = {
@@ -128,48 +112,6 @@ export default function TopicList({
                           image={topic.thumbnailUrl}
                           alt={topic.name}
                         />
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: 12,
-                            right: 12,
-                            zIndex: 1,
-                          }}
-                        >
-                          <IconButton
-                            onClick={(e: any) => toggleFavorite(e, topic.id)}
-                            sx={{
-                              bgcolor: "white",
-                              "&:hover": { bgcolor: "white" },
-                              "&:focus": {
-                                outline: "none",
-                              },
-                            }}
-                          >
-                            {topic.isFavorite ? (
-                              <Bookmark color="primary" />
-                            ) : (
-                              <BookmarkBorder color="primary" />
-                            )}
-                          </IconButton>
-                        </Box>
-                        <Chip
-                          label={topic.level}
-                          size="small"
-                          color={
-                            topic.level === "Beginner"
-                              ? "success"
-                              : topic.level === "Intermediate"
-                              ? "primary"
-                              : "secondary"
-                          }
-                          sx={{
-                            position: "absolute",
-                            bottom: -10,
-                            left: 16,
-                            fontWeight: 500,
-                          }}
-                        />
                       </Box>
                       <CardContent
                         sx={{
@@ -218,9 +160,6 @@ export default function TopicList({
                             mt: "auto",
                           }}
                         >
-                          <Typography variant="body2" color="text.secondary">
-                            {topic.sessionCount} sessions
-                          </Typography>
                           <Button
                             size="small"
                             endIcon={<ArrowForward />}

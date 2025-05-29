@@ -1,5 +1,5 @@
 export const formatTime = (raw?: string): string => {
-  if (!raw || typeof raw !== "string") return "0s"; // Trả về mặc định nếu không hợp lệ
+  if (!raw || typeof raw !== "string") return "0s";
 
   const parts = raw.split(":").map((p) => parseFloat(p));
 

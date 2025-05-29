@@ -1,7 +1,5 @@
 import { useState, useCallback } from "react";
 
-// ----------------------------------------------------------------------
-
 interface ReturnType {
   value: boolean;
   onTrue: () => void;

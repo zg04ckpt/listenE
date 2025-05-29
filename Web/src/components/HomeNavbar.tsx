@@ -1,9 +1,7 @@
-"use client";
-
 import React from "react";
 
 import { useState } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -22,6 +20,8 @@ import {
   useScrollTrigger,
   Fade,
   ListItemButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -48,12 +48,19 @@ function ElevationScroll(props: { children: React.ReactElement<any> }) {
   });
 }
 
+const pages = [
+  { name: "Home", path: "/" },
+  { name: "Topics", path: "/topics" },
+];
+
 const HomeNavbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const navigate = useNavigate();
+  const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
 
   const navItems = [{ text: "Login/Signup", icon: <Login />, path: "/auth" }];
 
@@ -68,6 +75,14 @@ const HomeNavbar = () => {
       }
       setDrawerOpen(open);
     };
+
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElNav(event.currentTarget);
+  };
+
+  const handleCloseNavMenu = () => {
+    setAnchorElNav(null);
+  };
 
   const drawer = (
     <Box
@@ -169,12 +184,10 @@ const HomeNavbar = () => {
 
                 {!isMobile && (
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    {navItems.map((item) => (
+                    {pages.map((page) => (
                       <Button
-                        key={item.text}
-                        component={RouterLink}
-                        to={item.path}
-                        startIcon={item.icon}
+                        key={page.name}
+                        onClick={() => navigate(page.path)}
                         sx={{
                           mx: 1,
                           fontWeight: 500,
@@ -187,7 +200,7 @@ const HomeNavbar = () => {
                           },
                         }}
                       >
-                        {item.text}
+                        {page.name}
                       </Button>
                     ))}
                   </Box>
@@ -209,19 +222,34 @@ const HomeNavbar = () => {
                       }}
                     />
                   </IconButton>
-                  <IconButton color="inherit">
-                    <Avatar
+                </Box>
+
+                <Box sx={{ flexGrow: 0 }}>
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="inherit"
+                      onClick={() => navigate("/auth")}
                       sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: isHomePage ? "white" : "primary.main",
+                        borderRadius: "20px",
+                        borderColor: "rgba(255,255,255,0.3)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          borderColor: "rgba(255,255,255,0.8)",
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                          transform: "translateY(-2px)",
+                        },
+                        "&:active": {
+                          transform: "translateY(1px)",
+                        },
+                        "&:focus": {
+                          outline: "none",
+                        },
                       }}
                     >
-                      <Person
-                        sx={{ color: isHomePage ? "primary.main" : "white" }}
-                      />
-                    </Avatar>
-                  </IconButton>
+                      Login/Signup
+                    </Button>
+                  </Box>
                 </Box>
               </Toolbar>
             </Container>

@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -44,11 +44,16 @@ import {
   Title,
   Description,
   AudioFile,
+  Edit,
+  Check,
+  Close,
+  Add,
+  Delete,
 } from "@mui/icons-material";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import type { IPostSegmentItem } from "../../../types/segment";
-import { createSessionTrack } from "../../../api/session";
+import { createTrack } from "../../../api/track";
 import { useNotification } from "../../../provider/NotificationProvider";
 
 interface RegionOptions {
@@ -60,14 +65,21 @@ interface RegionOptions {
 }
 
 export default function TrackAudioSplitter({
+  isShowContent,
   sentences = [],
   setSentences,
+  fullAudioURL,
+  isEditMode = false,
+  hideCreateButton = false,
 }: {
+  isShowContent: boolean;
   sentences: IPostSegmentItem[];
   setSentences: React.Dispatch<React.SetStateAction<IPostSegmentItem[]>>;
+  fullAudioURL?: string;
+  isEditMode?: boolean;
+  hideCreateButton?: boolean;
 }) {
   const { showSuccess } = useNotification();
-  const { sessionId } = useParams();
   const navigate = useNavigate();
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -92,22 +104,27 @@ export default function TrackAudioSplitter({
   );
   const [apiLoading, setApiLoading] = useState(false);
 
+  const [editingSentenceId, setEditingSentenceId] = useState<number | null>(
+    null
+  );
+  const [editingTranscript, setEditingTranscript] = useState<string>("");
+
   const [trackName, setTrackName] = useState("");
   const [trackNameError, setTrackNameError] = useState("");
 
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [sentenceToClean, setSentenceToClean] = useState<number | null>(null);
 
+  const [addSegmentDialogOpen, setAddSegmentDialogOpen] = useState(false);
+  const [newSegmentTranscript, setNewSegmentTranscript] = useState("");
+
   const waveformRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleCreateNewSessionTrack = async (
-    sessionId: number,
-    params: FormData
-  ) => {
+  const handleCreateNewTrack = async (params: FormData) => {
     try {
-      const response = await createSessionTrack(sessionId, params);
+      const response = await createTrack(params);
       return response.data;
     } catch (error) {
       console.error("Error creating track:", error);
@@ -116,10 +133,30 @@ export default function TrackAudioSplitter({
   };
 
   useEffect(() => {
+    if (fullAudioURL && !audioUrl) {
+      setLoading(true);
+      setError(null);
+
+      try {
+        setAudioUrl(fullAudioURL);
+
+        if (wavesurfer) {
+          wavesurfer.load(fullAudioURL);
+        }
+      } catch (err) {
+        console.error("Error loading audio from URL:", err);
+        setError("Không thể tải file âm thanh từ URL. Vui lòng thử lại.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [fullAudioURL, wavesurfer, audioUrl]);
+
+  useEffect(() => {
     return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      if (audioUrl && !fullAudioURL) URL.revokeObjectURL(audioUrl);
     };
-  }, [audioUrl]);
+  }, [audioUrl, fullAudioURL]);
 
   useEffect(() => {
     if (waveformRef.current && !wavesurfer) {
@@ -158,13 +195,17 @@ export default function TrackAudioSplitter({
         setWavesurfer(ws);
         setRegionsPlugin(regions);
 
+        if (fullAudioURL) {
+          ws.load(fullAudioURL);
+        }
+
         return () => ws.destroy();
       } catch (err) {
         console.error("Error initializing WaveSurfer:", err);
         setError("Không thể khởi tạo trình phát âm thanh. Vui lòng thử lại.");
       }
     }
-  }, [waveformRef]);
+  }, [waveformRef, fullAudioURL]);
 
   const setupInitialRegion = (ws: WaveSurfer, regions: any) => {
     try {
@@ -311,23 +352,34 @@ export default function TrackAudioSplitter({
       audioElementRef.current.src = audioUrl;
     }
 
+    const handleTimeUpdate = () => {
+      if (audioElementRef.current && sentence.endSec !== undefined) {
+        if (audioElementRef.current.currentTime >= sentence.endSec) {
+          audioElementRef.current.pause();
+          setPlayingSentenceId(null);
+          audioElementRef.current.removeEventListener(
+            "timeupdate",
+            handleTimeUpdate
+          );
+        }
+      }
+    };
+
+    audioElementRef.current.addEventListener("timeupdate", handleTimeUpdate);
+
     audioElementRef.current.onended = () => {
       setPlayingSentenceId(null);
+      if (audioElementRef.current) {
+        audioElementRef.current.removeEventListener(
+          "timeupdate",
+          handleTimeUpdate
+        );
+      }
     };
 
     audioElementRef.current.currentTime = sentence.startSec;
-
     audioElementRef.current.play();
-
     setPlayingSentenceId(sentenceId);
-
-    const duration = sentence.endSec - sentence.startSec;
-    setTimeout(() => {
-      if (audioElementRef.current && playingSentenceId === sentenceId) {
-        audioElementRef.current.pause();
-        setPlayingSentenceId(null);
-      }
-    }, duration * 1000 + 50);
   };
 
   const handleClearClick = (sentenceId: number, e: React.MouseEvent) => {
@@ -369,6 +421,46 @@ export default function TrackAudioSplitter({
     setSentenceToClean(null);
   };
 
+  const handleEditTranscript = (
+    sentenceId: number,
+    transcript: string,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    setEditingSentenceId(sentenceId);
+    setEditingTranscript(transcript);
+  };
+
+  const handleSaveTranscript = (sentenceId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (editingTranscript.trim() === "") {
+      setError("Nội dung câu không được để trống");
+      return;
+    }
+
+    setSentences((prev) =>
+      prev.map((s) => {
+        if (s.id === sentenceId) {
+          return {
+            ...s,
+            transcript: editingTranscript.trim(),
+          };
+        }
+        return s;
+      })
+    );
+
+    setEditingSentenceId(null);
+    setEditingTranscript("");
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSentenceId(null);
+    setEditingTranscript("");
+  };
+
   const formatTime = (time: number): string => {
     const m = Math.floor(time / 60)
       .toString()
@@ -405,7 +497,7 @@ export default function TrackAudioSplitter({
       return;
     }
 
-    if (!audioFile) {
+    if (!audioFile && !fullAudioURL) {
       setError("Vui lòng tải lên file audio");
       return;
     }
@@ -428,7 +520,13 @@ export default function TrackAudioSplitter({
       const formData = new FormData();
       formData.append("name", trackName);
       formData.append("fullTranscript", getFullTranscript());
-      formData.append("fullAudio", audioFile);
+
+      if (audioFile) {
+        formData.append("fullAudio", audioFile);
+      } else if (fullAudioURL) {
+        formData.append("useExistingAudio", "true");
+      }
+
       sentences.forEach((segment, index) => {
         formData.append(
           `segments[${index}][startSec]`,
@@ -444,25 +542,18 @@ export default function TrackAudioSplitter({
           (segment.order ?? 0).toString()
         );
       });
-      if (sessionId) {
-        const response = await handleCreateNewSessionTrack(
-          Number(sessionId),
-          formData
-        );
-        console.log("Track created successfully:", response);
-        showSuccess("Tạo mới track thành công!");
+      const response = await handleCreateNewTrack(formData);
+      console.log("Track created successfully:", response);
+      showSuccess("Tạo mới track thành công!");
 
-        setTrackName("");
-        setAudioFile(null);
-        setAudioUrl(null);
-        if (wavesurfer) {
-          wavesurfer.empty();
-        }
-        setSentences([]);
-        navigate(`/dashboard/manage-sessions`);
-      } else {
-        throw new Error("Session ID is missing");
+      setTrackName("");
+      setAudioFile(null);
+      setAudioUrl(null);
+      if (wavesurfer) {
+        wavesurfer.empty();
       }
+      setSentences([]);
+      navigate(`/dashboard/manage-tracks`);
     } catch (err) {
       console.error("API error:", err);
       setError("Không thể tạo mới track. Vui lòng thử lại sau.");
@@ -471,11 +562,60 @@ export default function TrackAudioSplitter({
     }
   };
 
+  const handleAddSegment = () => {
+    if (!newSegmentTranscript.trim()) {
+      setError("Nội dung segment không được để trống");
+      return;
+    }
+
+    const maxId =
+      sentences.length > 0
+        ? Math.max(
+            ...sentences.map((s) => (typeof s.id === "number" ? s.id : 0))
+          )
+        : 0;
+
+    const newId = maxId + 1;
+
+    const newSegment: IPostSegmentItem = {
+      id: newId,
+      transcript: newSegmentTranscript.trim(),
+      order: sentences.length + 1,
+      isCreate: true,
+    };
+
+    setSentences((prev) => [...prev, newSegment]);
+    setNewSegmentTranscript("");
+    setAddSegmentDialogOpen(false);
+
+    setSelectedSentenceId(newId);
+  };
+
+  const handleDeleteSegment = (segmentId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSentences((prev) => prev.filter((s) => s.id !== segmentId));
+
+    if (selectedSentenceId === segmentId) {
+      setSelectedSentenceId(null);
+    }
+
+    if (playingSentenceId === segmentId) {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+      }
+      setPlayingSentenceId(null);
+    }
+  };
+
+  const isAudioAvailable = !!audioUrl;
+
   return (
     <Box>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-        Tạo Track Mới
-      </Typography>
+      {isShowContent && (
+        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+          Tạo Track Mới
+        </Typography>
+      )}
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3 }}>
@@ -484,76 +624,83 @@ export default function TrackAudioSplitter({
       )}
 
       {/* Track Information Card */}
-      <Card
-        elevation={3}
-        sx={{
-          mb: 4,
-          borderRadius: 2,
-          overflow: "hidden",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-        }}
-      >
-        <Box
+      {isShowContent && (
+        <Card
+          elevation={3}
           sx={{
-            bgcolor: "primary.main",
-            color: "primary.contrastText",
-            py: 1.5,
-            px: 3,
-            display: "flex",
-            alignItems: "center",
+            mb: 4,
+            borderRadius: 2,
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           }}
         >
-          <MusicNote sx={{ mr: 1 }} />
-          <Typography variant="h6">Thông tin Track</Typography>
-        </Box>
-        <CardContent sx={{ p: 3 }}>
-          <TextField
-            label="Tên Track"
-            value={trackName}
-            onChange={handleTrackNameChange}
-            error={!!trackNameError}
-            helperText={trackNameError}
-            fullWidth
-            required
-            margin="normal"
-            variant="outlined"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Title />
-                </InputAdornment>
-              ),
-            }}
+          <Box
             sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                "&:hover fieldset": {
-                  borderColor: "primary.light",
-                },
-              },
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              py: 1.5,
+              px: 3,
+              display: "flex",
+              alignItems: "center",
             }}
-          />
-
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <Description sx={{ mr: 1, color: "text.secondary" }} />
-            <Typography variant="body2" color="text.secondary">
-              Transcript:{" "}
-              {sentences.length > 0
-                ? `${getFullTranscript().substring(0, 100)}${
-                    getFullTranscript().length > 100 ? "..." : ""
-                  }`
-                : "Chưa có nội dung"}
-            </Typography>
+          >
+            <MusicNote sx={{ mr: 1 }} />
+            <Typography variant="h6">Thông tin Track</Typography>
           </Box>
+          <CardContent sx={{ p: 3 }}>
+            <TextField
+              label="Tên Track"
+              value={trackName}
+              onChange={handleTrackNameChange}
+              error={!!trackNameError}
+              helperText={trackNameError}
+              fullWidth
+              required
+              margin="normal"
+              variant="outlined"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Title />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "primary.light",
+                  },
+                },
+              }}
+            />
 
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <AudioFile sx={{ mr: 1, color: "text.secondary" }} />
-            <Typography variant="body2" color="text.secondary">
-              Audio: {audioFile ? audioFile.name : "Chưa tải lên file audio"}
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Description sx={{ mr: 1, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary">
+                Transcript:{" "}
+                {sentences.length > 0
+                  ? `${getFullTranscript().substring(0, 100)}${
+                      getFullTranscript().length > 100 ? "..." : ""
+                    }`
+                  : "Chưa có nội dung"}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <AudioFile sx={{ mr: 1, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary">
+                Audio:{" "}
+                {audioFile
+                  ? audioFile.name
+                  : fullAudioURL
+                  ? "Đã tải từ server"
+                  : "Chưa tải lên file audio"}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       <Paper
         sx={{
@@ -574,32 +721,37 @@ export default function TrackAudioSplitter({
         <Divider sx={{ mb: 3 }} />
 
         <Stack direction="row" spacing={2} mb={2}>
-          <Button
-            variant="contained"
-            startIcon={<CloudUpload />}
-            onClick={() => fileInputRef.current?.click()}
-            sx={{
-              "&:focus": {
-                outline: "none",
-              },
-              borderRadius: 2,
-            }}
-          >
-            Tải lên audio
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="audio/*"
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
+          {/* Only show upload button if no fullAudioURL is provided or if we want to allow overriding */}
+          {!fullAudioURL && (
+            <>
+              <Button
+                variant="contained"
+                startIcon={<CloudUpload />}
+                onClick={() => fileInputRef.current?.click()}
+                sx={{
+                  "&:focus": {
+                    outline: "none",
+                  },
+                  borderRadius: 2,
+                }}
+              >
+                Tải lên audio
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="audio/*"
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+            </>
+          )}
 
           <Button
             variant="contained"
             startIcon={isPlaying ? <Stop /> : <PlayArrow />}
             onClick={togglePlayback}
-            disabled={!audioFile}
+            disabled={!isAudioAvailable}
             sx={{
               "&:focus": {
                 outline: "none",
@@ -616,7 +768,7 @@ export default function TrackAudioSplitter({
             startIcon={<ContentCut />}
             onClick={assignRegionToSentence}
             disabled={
-              !audioFile ||
+              !isAudioAvailable ||
               !selectedRegion ||
               !selectedSentenceId ||
               selectedSentenceId === lastAssignedSentenceId
@@ -630,6 +782,24 @@ export default function TrackAudioSplitter({
           >
             Gán thời gian
           </Button>
+
+          {/* Add Segment button - only show in edit mode */}
+          {isEditMode && (
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<Add />}
+              onClick={() => setAddSegmentDialogOpen(true)}
+              sx={{
+                "&:focus": {
+                  outline: "none",
+                },
+                borderRadius: 2,
+              }}
+            >
+              Thêm segment
+            </Button>
+          )}
         </Stack>
 
         <Box sx={{ backgroundColor: "#f5f5f5", borderRadius: 2, p: 2 }}>
@@ -682,7 +852,41 @@ export default function TrackAudioSplitter({
                   }}
                 >
                   <TableCell>{sentence.id}</TableCell>
-                  <TableCell>{sentence.transcript}</TableCell>
+                  <TableCell>
+                    {editingSentenceId === sentence.id ? (
+                      <TextField
+                        fullWidth
+                        multiline
+                        variant="outlined"
+                        size="small"
+                        value={editingTranscript}
+                        onChange={(e) => setEditingTranscript(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        sx={{ minWidth: 250 }}
+                      />
+                    ) : (
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {sentence.transcript}
+                        {isEditMode && (
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) =>
+                              handleEditTranscript(
+                                sentence.id,
+                                sentence.transcript,
+                                e
+                              )
+                            }
+                            sx={{ ml: 1 }}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {sentence.startSec !== undefined ? (
                       <Chip
@@ -728,24 +932,75 @@ export default function TrackAudioSplitter({
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    {sentence.startSec !== undefined &&
-                    sentence.endSec !== undefined ? (
-                      <Tooltip title="Xóa thông tin thời gian">
+                    {editingSentenceId === sentence.id ? (
+                      <Box>
+                        <IconButton
+                          color="success"
+                          size="small"
+                          onClick={(e) => handleSaveTranscript(sentence.id, e)}
+                          sx={{
+                            mr: 1,
+                            "&:hover": {
+                              backgroundColor: "rgba(76, 175, 80, 0.04)",
+                            },
+                          }}
+                        >
+                          <Check />
+                        </IconButton>
                         <IconButton
                           color="error"
                           size="small"
-                          onClick={(e) => handleClearClick(sentence.id, e)}
+                          onClick={handleCancelEdit}
                           sx={{
                             "&:hover": {
                               backgroundColor: "rgba(211, 47, 47, 0.04)",
                             },
                           }}
                         >
-                          <Clear />
+                          <Close />
                         </IconButton>
-                      </Tooltip>
+                      </Box>
                     ) : (
-                      "-"
+                      <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        {sentence.startSec !== undefined &&
+                          sentence.endSec !== undefined && (
+                            <Tooltip title="Xóa thông tin thời gian">
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={(e) =>
+                                  handleClearClick(sentence.id, e)
+                                }
+                                sx={{
+                                  mr: 1,
+                                  "&:hover": {
+                                    backgroundColor: "rgba(211, 47, 47, 0.04)",
+                                  },
+                                }}
+                              >
+                                <Clear />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        {isEditMode && (
+                          <Tooltip title="Xóa segment">
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={(e) =>
+                                handleDeleteSegment(sentence.id, e)
+                              }
+                              sx={{
+                                "&:hover": {
+                                  backgroundColor: "rgba(211, 47, 47, 0.04)",
+                                },
+                              }}
+                            >
+                              <Delete />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     )}
                   </TableCell>
                 </TableRow>
@@ -755,7 +1010,8 @@ export default function TrackAudioSplitter({
         </TableContainer>
       )}
 
-      {sentences.length > 0 && (
+      {/* Only show the Create Track button if not in edit mode and not hidden */}
+      {sentences.length > 0 && !hideCreateButton && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
           <Button
             variant="contained"
@@ -810,6 +1066,48 @@ export default function TrackAudioSplitter({
             variant="contained"
           >
             Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Segment Dialog */}
+      <Dialog
+        open={addSegmentDialogOpen}
+        onClose={() => setAddSegmentDialogOpen(false)}
+        aria-labelledby="add-segment-dialog-title"
+      >
+        <DialogTitle id="add-segment-dialog-title">
+          Thêm segment mới
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Nhập nội dung cho segment mới. Sau khi tạo, bạn có thể gán thời gian
+            cho segment này.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nội dung segment"
+            fullWidth
+            multiline
+            rows={4}
+            value={newSegmentTranscript}
+            onChange={(e) => setNewSegmentTranscript(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setAddSegmentDialogOpen(false)}
+            color="primary"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleAddSegment}
+            color="success"
+            variant="contained"
+          >
+            Thêm
           </Button>
         </DialogActions>
       </Dialog>

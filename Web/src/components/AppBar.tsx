@@ -7,19 +7,18 @@ import Typography from "@mui/material/Typography";
 import Menu from "@mui/material/Menu";
 import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
-import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
-import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { logout } from "../api/auth";
 import { useNotification } from "../provider/NotificationProvider";
 import { useNavigate } from "react-router-dom";
+import { Fade } from "@mui/material";
 
 const pages = [
   { name: "Home", path: "/" },
   { name: "Topics", path: "/topics" },
 ];
-const settings = ["Hồ sơ", "Tài khoản", "Cài đặt", "Đăng xuất"];
 
 export default function ResponsiveAppBar() {
   const navigate = useNavigate();
@@ -28,31 +27,22 @@ export default function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
   );
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-    null
-  );
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
-  };
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
 
-  const handleCloseUserMenu = async (setting: string) => {
-    setAnchorElUser(null);
-    if (setting === "Đăng xuất") {
-      try {
-        await logout();
-        window.location.href = "/auth";
-      } catch (error) {
-        showError(error instanceof Error ? error.message : String(error));
-        console.error(error);
-      }
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = "/auth";
+    } catch (error) {
+      showError(error instanceof Error ? error.message : String(error));
+      console.error(error);
     }
   };
 
@@ -79,6 +69,10 @@ export default function ResponsiveAppBar() {
               height: "auto",
               borderRadius: 4,
               transform: "perspective(1000px) rotateY(-5deg)",
+              transition: "transform 0.3s ease-in-out",
+              "&:hover": {
+                transform: "perspective(1000px) rotateY(-15deg) scale(1.05)",
+              },
             }}
           />
 
@@ -110,7 +104,13 @@ export default function ResponsiveAppBar() {
               sx={{ display: { xs: "block", md: "none" } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                <MenuItem
+                  key={page.name}
+                  onClick={() => {
+                    handleCloseNavMenu();
+                    navigate(page.path);
+                  }}
+                >
                   <Typography sx={{ textAlign: "center" }}>
                     {page.name}
                   </Typography>
@@ -127,8 +127,23 @@ export default function ResponsiveAppBar() {
                   my: 2,
                   color: "white",
                   display: "block",
+                  position: "relative",
                   "&:focus": {
                     outline: "none !important",
+                  },
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    width: "0",
+                    height: "2px",
+                    bottom: "5px",
+                    left: "50%",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease-in-out",
+                  },
+                  "&:hover::after": {
+                    width: "80%",
+                    left: "10%",
                   },
                 }}
               >
@@ -136,52 +151,39 @@ export default function ResponsiveAppBar() {
               </Button>
             ))}
           </Box>
-          <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton
-                onClick={handleOpenUserMenu}
-                sx={{ p: 0, "&:focus": { outline: "none" } }}
+          <Box
+            sx={{
+              flexGrow: 0,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Fade in={true}>
+              <Button
+                variant="outlined"
+                color="inherit"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                sx={{
+                  borderRadius: "20px",
+                  borderColor: "rgba(255,255,255,0.3)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    borderColor: "rgba(255,255,255,0.8)",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    transform: "translateY(-2px)",
+                  },
+                  "&:active": {
+                    transform: "translateY(1px)",
+                  },
+                  "&:focus": {
+                    outline: "none",
+                  },
+                }}
               >
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: "45px", zIndex: 10000 }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem
-                  key={setting}
-                  onClick={() => handleCloseUserMenu(setting)}
-                  sx={
-                    setting === "Đăng xuất"
-                      ? {
-                          color: "red",
-                          fontSize: "1.1rem",
-                          fontWeight: "bold",
-                          borderTop: "1px solid rgba(0,0,0,0.1)",
-                        }
-                      : {}
-                  }
-                >
-                  <Typography sx={{ textAlign: "center" }}>
-                    {setting}
-                  </Typography>
-                </MenuItem>
-              ))}
-            </Menu>
+                Đăng xuất
+              </Button>
+            </Fade>
           </Box>
         </Toolbar>
       </Container>

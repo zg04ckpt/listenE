@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Grid, Button, Typography } from "@mui/material";
 
 import {

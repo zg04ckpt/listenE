@@ -3,8 +3,7 @@ export type ITopicItem = {
   name: string;
   thumbnailUrl: string;
   description: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
-  sessionCount: number;
+  type: string;
   isFavorite?: boolean;
 };
 
@@ -14,4 +13,17 @@ export type ITopicsFilters = {
   name?: string;
   search?: string;
   skill?: string[];
+};
+
+export type ITopicListResponse = {
+  items: ITopicItem[];
+  totalItems: number;
+  totalPages: number;
+};
+
+export type ITopicCreateEditItem = {
+  name: string;
+  description: string;
+  thumbnail: File | null;
+  thumbnailPreview: string | null;
 };

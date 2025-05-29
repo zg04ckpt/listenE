@@ -61,12 +61,9 @@ export default function TrackContentSplitter({
   };
 
   const splitIntoSentences = () => {
-    // Split text by sentence-ending punctuation followed by a space or newline
-    // This regex looks for .!? followed by a space or end of string
     const sentenceRegex = /[^.!?]+[.!?]+(\s|$)/g;
     const matches = text.match(sentenceRegex) || [];
 
-    // Clean up sentences and put each on a new line
     const formattedSentences = matches
       .map((sentence) => sentence.trim())
       .join("\n");
@@ -82,7 +79,6 @@ export default function TrackContentSplitter({
     }));
     setSentences(sentenceItems);
 
-    // Pass sentences to parent component
     onSentencesCreated(sentenceItems);
   };
 

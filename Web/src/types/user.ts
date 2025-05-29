@@ -30,12 +30,24 @@ export type IUserItem = {
   phoneNumber: string;
 };
 
-export type IUserTableFilterValue = string | string[];
+export type FetchUsersParams = {
+  page?: number;
+  size?: number;
+  email?: string;
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
+};
 
-export type IUserTableFilters = {
-  name: string;
-  role: string[];
-  status: string;
-  phoneNumber: string;
+export type IUserResponseItem = {
+  id: number;
   email: string;
+  imageUrl: string;
+  firstName: string;
+  lastName: string;
+  lastLogin: string;
+  isActivated: boolean;
+  isEmailConfirmed: boolean;
+  updatedAt: string;
+  createdAt: string;
+  roles: string[];
 };

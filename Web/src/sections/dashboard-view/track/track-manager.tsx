@@ -97,6 +97,7 @@ export default function TrackManager() {
 
           <TabPanel value={tabValue} index={1}>
             <TrackAudioSplitter
+              isShowContent={true}
               sentences={sentences}
               setSentences={setSentences}
             />

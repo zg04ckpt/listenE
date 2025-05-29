@@ -31,3 +31,10 @@ export const sendResetPasswordCode = (email: string) => {
 export const resetPassword = (data: IUserResetPasswordItem) => {
   return axios.put(endpoints.auth.resetPassword, data);
 };
+
+export const handleGoogleCallback = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get("returnUrl") || "/topics";
+
+  window.location.href = returnUrl;
+};

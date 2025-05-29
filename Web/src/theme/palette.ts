@@ -1,7 +1,5 @@
 import { alpha } from "@mui/material/styles";
 
-// ----------------------------------------------------------------------
-
 export type ColorSchema =
   | "primary"
   | "secondary"
@@ -23,8 +21,6 @@ declare module "@mui/material/styles/createPalette" {
     darker: string;
   }
 }
-
-// SETUP COLORS
 
 export const grey = {
   0: "#FFFFFF",
@@ -120,8 +116,6 @@ const base = {
   divider: alpha(grey[500], 0.2),
   action,
 };
-
-// ----------------------------------------------------------------------
 
 export function palette(mode: "light" | "dark") {
   const light = {

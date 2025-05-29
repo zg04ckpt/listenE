@@ -1,54 +1,129 @@
-# React + TypeScript + Vite
+# ListenE - Ứng dụng học tiếng Anh qua luyện nghe
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ListenE là một ứng dụng web giúp người dùng cải thiện kỹ năng tiếng Anh thông qua các bài tập luyện nghe và tương tác.
 
-Currently, two official plugins are available:
+## Yêu cầu hệ thống
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt:
 
-## Expanding the ESLint configuration
+- Node.js (phiên bản 16.x trở lên)
+- npm (thường đi kèm với Node.js) hoặc yarn
+- Git
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Cài đặt
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. Clone dự án về máy:
+
+```bash
+git clone <repository-url>
+cd ListenE
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Cài đặt các dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm install
+# hoặc nếu bạn dùng yarn
+yarn install
 ```
+
+## Cấu hình môi trường
+
+1. Tạo file `.env` trong thư mục gốc của dự án:
+
+```bash
+cp .env.example .env
+```
+
+2. Cập nhật các biến môi trường trong file `.env`:
+
+```env
+VITE_API_URL=your_api_url_here
+VITE_APP_NAME=ListenE
+```
+
+## Chạy dự án
+
+### Môi trường development
+
+```bash
+npm run dev
+# hoặc
+yarn dev
+```
+
+Ứng dụng sẽ chạy tại địa chỉ: `http://localhost:5173`
+
+### Build cho production
+
+```bash
+npm run build
+# hoặc
+yarn build
+```
+
+### Preview bản build
+
+```bash
+npm run preview
+# hoặc
+yarn preview
+```
+
+## Cấu trúc thư mục
+
+```
+src/
+├── api/          # Chứa các API calls
+├── assets/       # Chứa hình ảnh, fonts, etc.
+├── components/   # Các components tái sử dụng
+├── hooks/        # Custom React hooks
+├── layouts/      # Layout components
+├── pages/        # Các trang của ứng dụng
+├── provider/     # Context providers
+├── routes/       # Cấu hình routing
+├── sections/     # Các section components
+├── theme/        # Cấu hình theme
+├── types/        # TypeScript type definitions
+└── utils/        # Utility functions
+```
+
+## Công nghệ sử dụng
+
+- React 18
+- TypeScript
+- Vite
+- Material-UI (MUI)
+- React Router
+- Framer Motion
+- Axios
+
+## Tính năng chính
+
+- Học tiếng Anh qua các bài tập luyện nghe
+- Hệ thống bài tập đa dạng (Part 1, Part 2, Part 3, Part 4)
+- Theo dõi tiến độ học tập
+- Đánh dấu bài tập yêu thích
+- Giao diện người dùng thân thiện và responsive
+
+## Hỗ trợ
+
+Nếu bạn gặp bất kỳ vấn đề nào trong quá trình cài đặt hoặc sử dụng, vui lòng:
+
+1. Kiểm tra các issues đã có
+2. Tạo issue mới với mô tả chi tiết về vấn đề
+3. Liên hệ với team phát triển
+
+## Đóng góp
+
+Chúng tôi rất hoan nghênh mọi đóng góp từ cộng đồng. Để đóng góp:
+
+1. Fork dự án
+2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
+3. Commit thay đổi (`git commit -m 'Add some AmazingFeature'`)
+4. Push lên branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+## License
+
+Dự án này được cấp phép theo [MIT License](LICENSE).

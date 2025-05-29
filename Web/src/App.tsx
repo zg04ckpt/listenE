@@ -1,7 +1,11 @@
-"use client";
-
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Authentication from "./pages/Auththentication";
+import GoogleCallback from "./components/GooleAuthCallBack";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import { NavBarProvider } from "./provider/NavBarProvider";
@@ -9,18 +13,34 @@ import DashboardLayout from "./layouts/DashBoardLayout";
 import AppLayout from "./layouts/AppLayout";
 import { NotificationProvider } from "./provider/NotificationProvider";
 
-import { UserListView } from "./sections/user/view";
+import { UserListView } from "./sections/dashboard-view/user/view";
 
+import { TrackListView } from "./sections/dashboard-view/track/view";
 import TrackManager from "./sections/dashboard-view/track/track-manager";
+import { TrackEditView } from "./sections/dashboard-view/track/view";
 
-import { SessionListView } from "./sections/dashboard-view/session/view";
+import { TopicListView } from "./sections/dashboard-view/topic/view";
+import TopicCreateEditForm from "./sections/dashboard-view/topic/topic-create-edit-form";
+
+import { QuestionListView } from "./sections/dashboard-view/question/view";
+import QuestionCreateEditForm from "./sections/dashboard-view/question/question-create-edit-form";
+
+import { TagListView } from "./sections/dashboard-view/tag/view";
+import TagCreateEditForm from "./sections/dashboard-view/tag/tag-create-edit-form";
+
+import RoleManagementPage from "./sections/dashboard-view/role/role-management-page";
+import UserRoleAssignment from "./sections/dashboard-view/role/user-role-assignment";
 
 import TopicDetailsPage from "./pages/TopicDetailsPage";
-import SessionDetailsPage from "./pages/SessionDetailsPage";
 import TrackPracticePage from "./pages/TrackPracticePage";
 import TrackSegmentsPage from "./pages/TrackSegmentsPage";
 import SegmentPracticePage from "./pages/SegmentPracticePage";
 import TopicsPage from "./pages/TopicsPage";
+import TagQuestionsPage from "./pages/TagQuestionsPage";
+import QuestionPracticePage from "./pages/QuestionPracticePage";
+import ResultsPage from "./pages/ResultsPage";
+import GroupQuestionPracticePage from "./pages/GroupQuestionPracticePage";
+import ForbiddenPage from "./pages/ForbiddenPage";
 
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -119,42 +139,111 @@ function App() {
                     element={<TopicDetailsPage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId"
-                    element={<SessionDetailsPage />}
-                  />
-                  <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId"
+                    path="/topic/:topicId/track/:trackId"
                     element={<TrackPracticePage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId/segments"
+                    path="/topic/:topicId/track/:trackId/segments"
                     element={<TrackSegmentsPage />}
                   />
                   <Route
-                    path="/topic/:topicId/session/:sessionId/track/:trackId/segment/:segmentId"
+                    path="/topic/:topicId/track/:trackId/segment/:segmentId"
                     element={<SegmentPracticePage />}
                   />
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/questions"
+                    element={<TagQuestionsPage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/question/:questionId/practice"
+                    element={<QuestionPracticePage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/group/:groupId/practice"
+                    element={<GroupQuestionPracticePage />}
+                  />
+
+                  <Route
+                    path="/topic/:topicId/tag/:tagId/results"
+                    element={<ResultsPage />}
+                  />
+
+                  <Route path="/403" element={<ForbiddenPage />} />
+
                   <Route path="/dashboard" element={<DashboardLayout />}>
-                    {/* Tracks route */}
                     <Route
-                      path="sessions/:sessionId/create-track"
-                      element={<TrackManager />}
+                      index
+                      element={<Navigate to="manage-topics" replace />}
+                    />
+                    <Route path="manage-users" element={<UserListView />} />
+
+                    <Route path="create-track" element={<TrackManager />} />
+                    <Route path="manage-tracks" element={<TrackListView />} />
+                    <Route
+                      path="tracks/:trackId/edit-track"
+                      element={<TrackEditView />}
                     />
 
-                    {/* Topics route */}
+                    <Route path="manage-topics" element={<TopicListView />} />
+                    <Route
+                      path="topics/create"
+                      element={<TopicCreateEditForm />}
+                    />
+                    <Route
+                      path="topics/:topicId/edit"
+                      element={<TopicCreateEditForm />}
+                    />
 
                     <Route
-                      path="manage-sessions"
-                      element={<SessionListView />}
+                      path="manage-questions"
+                      element={<QuestionListView />}
+                    />
+                    <Route
+                      path="questions/create"
+                      element={<QuestionCreateEditForm />}
+                    />
+
+                    <Route
+                      path="questions/:questionId/edit"
+                      element={<QuestionCreateEditForm />}
+                    />
+
+                    <Route
+                      path="groups/:groupId/edit"
+                      element={<QuestionCreateEditForm />}
+                    />
+
+                    <Route path="manage-tags" element={<TagListView />} />
+                    <Route path="tags/create" element={<TagCreateEditForm />} />
+                    <Route
+                      path="tags/:tagId/edit"
+                      element={<TagCreateEditForm />}
+                    />
+
+                    <Route
+                      path="manage-roles"
+                      element={<RoleManagementPage />}
+                    />
+                    <Route
+                      path="asign-roles"
+                      element={<UserRoleAssignment />}
+                    />
+                    <Route
+                      path="asign-roles/:userId"
+                      element={<UserRoleAssignment />}
                     />
                   </Route>
-
-                  <Route path="/manage-user" element={<UserListView />} />
                 </Route>
                 <Route path="/auth" element={<Authentication />} />
                 <Route
                   path="/auth/forgot-password"
                   element={<ForgotPassword />}
+                />
+                <Route
+                  path="/auth/google-login-callback"
+                  element={<GoogleCallback />}
                 />
               </Routes>
             </AnimatePresence>

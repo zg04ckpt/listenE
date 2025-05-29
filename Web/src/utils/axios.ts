@@ -4,8 +4,6 @@ import { HOST_API } from "../config-global";
 
 import { ApiErrorResponse } from "./ApiResponse";
 
-// ----------------------------------------------------------------------
-
 const axiosInstance = axios.create({
   baseURL: HOST_API,
   withCredentials: true,
@@ -16,6 +14,9 @@ axiosInstance.interceptors.response.use(
   (error: AxiosError) => {
     try {
       if (error.response) {
+        if (error.response.status === 403) {
+          window.location.href = "/403";
+        }
         const responseData = error.response.data as
           | ApiErrorResponse
           | undefined;
@@ -29,8 +30,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 export default axiosInstance;
-
-// ----------------------------------------------------------------------
 
 export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
   const [url, config] = Array.isArray(args) ? args : [args];
@@ -55,8 +54,6 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
   return res.data;
 };
 
-// ----------------------------------------------------------------------
-
 export const endpoints = {
   auth: {
     login: "/auth/login",
@@ -70,15 +67,21 @@ export const endpoints = {
     list: "/api/users/query",
     details: "/api/user",
     search: "/api/product/search",
+    listResponse: "/users",
+    listRoles: "/users/roles",
+    asignRoles: (userId: number) => `/users/${userId}/roles`,
+    profile: "/users/profile",
   },
-  topic: {
-    root: "/topics",
-    listSession: (topicId: number) => `/topics/${topicId}/sessions`,
+  topic: { root: "/topics" },
+  question: {
+    root: "/toeics/questions",
+    part1: "/toeics/part-1/questions",
+    part2: "/toeics/part-2/questions",
+    part34: "toeics/part-34/groups",
   },
-  session: {
-    root: "/sessions",
-    listTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
-    createTrack: (sessionId: number) => `/sessions/${sessionId}/tracks`,
+
+  tag: {
+    root: "/toeics/tags",
   },
   track: {
     root: "/tracks",

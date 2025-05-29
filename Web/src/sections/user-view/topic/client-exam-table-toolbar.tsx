@@ -5,8 +5,6 @@ import { Grid, Button, TextField } from "@mui/material";
 import { TypeSkill } from "../../../types/enum";
 import { ITopicsFilters, ITopicsFilterValue } from "../../../types/topic";
 
-// ----------------------------------------------------------------------
-
 type Props = {
   filters: ITopicsFilters;
   onFilters: (name: string, value: ITopicsFilterValue) => void;

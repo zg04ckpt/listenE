@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -25,36 +23,27 @@ import { motion } from "framer-motion";
 import { ISegmentResponseItem } from "../types/segment";
 import { getDetailsTrack } from "../api/track";
 import { ITrackReponseItem } from "../types/track";
-import { ISessionItem } from "../types/session";
-import { getDetailsSession } from "../api/session";
 import { getDetailsTopic } from "../api/topic";
 import { ITopicItem } from "../types/topic";
 import { formatTime } from "../utils/formats";
 
 export default function TrackSegmentsPage() {
-  const { topicId, sessionId, trackId } = useParams();
+  const { topicId, trackId } = useParams();
   const navigate = useNavigate();
   const [topic, setTopic] = useState<ITopicItem | null>(null);
-  const [session, setSession] = useState<ISessionItem | null>(null);
   const [track, setTrack] = useState<ITrackReponseItem | null>(null);
   const [segments, setSegments] = useState<ISegmentResponseItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const handelGetDetailsData = async (
-    topicId: number,
-    sessionId: number,
-    trackId: number
-  ) => {
+  const handelGetDetailsData = async (topicId: number, trackId: number) => {
     setLoading(true);
     try {
-      const [topicRes, sessionsRes, trackRes] = await Promise.all([
+      const [topicRes, trackRes] = await Promise.all([
         getDetailsTopic(topicId),
-        getDetailsSession(sessionId),
         getDetailsTrack(trackId),
       ]);
 
       setTopic(topicRes?.data?.data);
-      setSession(sessionsRes?.data?.data);
       setTrack(trackRes?.data?.data);
       setSegments(trackRes?.data?.data?.segments);
     } catch (error) {
@@ -65,18 +54,16 @@ export default function TrackSegmentsPage() {
   };
 
   useEffect(() => {
-    if (topicId && sessionId && trackId)
-      handelGetDetailsData(Number(topicId), Number(sessionId), Number(trackId));
-  }, [topicId, sessionId, trackId]);
+    if (topicId && trackId)
+      handelGetDetailsData(Number(topicId), Number(trackId));
+  }, [topicId, trackId]);
 
   const handleSegmentClick = (segmentId: number) => {
-    navigate(
-      `/topic/${topicId}/session/${sessionId}/track/${trackId}/segment/${segmentId}`
-    );
+    navigate(`/topic/${topicId}/track/${trackId}/segment/${segmentId}`);
   };
 
   const handlePracticeAll = () => {
-    navigate(`/topic/${topicId}/session/${sessionId}/track/${trackId}`);
+    navigate(`/topic/${topicId}/track/${trackId}`);
   };
 
   const container = {
@@ -151,12 +138,10 @@ export default function TrackSegmentsPage() {
           <Link
             underline="hover"
             color="inherit"
-            onClick={() =>
-              navigate(`topic/${topic?.id}/session/${session?.id}`)
-            }
+            onClick={() => navigate(`/topic/${topic?.id}`)}
             style={{ cursor: "pointer" }}
           >
-            Back to Session
+            {topic?.name}
           </Link>
           <Typography color="text.primary">{track.name} Segments</Typography>
         </Breadcrumbs>
@@ -164,9 +149,7 @@ export default function TrackSegmentsPage() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() =>
-              navigate(`/topic/${topic?.id}/session/${session?.id}`)
-            }
+            onClick={() => navigate(`/topic/${topic?.id}`)}
             sx={{ mr: 2 }}
           >
             Back
@@ -176,18 +159,6 @@ export default function TrackSegmentsPage() {
               {track.name}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-              {/* <Chip
-                label={track.difficulty}
-                size="small"
-                color={
-                  track.difficulty === "Easy"
-                    ? "success"
-                    : track.difficulty === "Medium"
-                    ? "primary"
-                    : "error"
-                }
-                sx={{ fontWeight: 500, mr: 2 }}
-              /> */}
               <Typography variant="body2" color="text.secondary">
                 Duration: {formatTime(track.fullAudioDuration)}
               </Typography>
@@ -199,41 +170,35 @@ export default function TrackSegmentsPage() {
           elevation={0}
           sx={{
             p: 3,
+            borderRadius: 2,
+            bgcolor: "rgba(0,0,0,0.02)",
             mb: 4,
-            borderRadius: 3,
-            bgcolor: "primary.light",
-            color: "white",
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 2,
+            border: "1px solid rgba(0,0,0,0.05)",
           }}
         >
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Practice All Segments Together
-            </Typography>
-            <Typography variant="body2">
-              Practice the entire track in one session
-            </Typography>
-          </Box>
+          <Typography variant="body1" paragraph>
+            This track is divided into {segments.length} segments for more
+            focused practice. You can practice each segment individually or
+            practice the full track.
+          </Typography>
           <Button
             variant="contained"
-            color="secondary"
             startIcon={<PlayArrow />}
             onClick={handlePracticeAll}
             sx={{
+              borderRadius: "20px",
               px: 3,
               py: 1,
-              bgcolor: "white",
-              color: "primary.main",
+              fontWeight: 600,
+              boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)",
+              transition: "all 0.2s ease",
               "&:hover": {
-                bgcolor: "rgba(255,255,255,0.9)",
+                transform: "translateY(-2px)",
+                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
               },
             }}
           >
-            Làm Tất Cả
+            Practice Full Track
           </Button>
         </Paper>
 
@@ -245,29 +210,30 @@ export default function TrackSegmentsPage() {
         >
           Segments ({segments.length})
         </Typography>
-        <Divider sx={{ mb: 4 }} />
+        <Divider sx={{ mb: 3 }} />
 
         <motion.div variants={container} initial="hidden" animate="show">
-          <List sx={{ bgcolor: "background.paper", borderRadius: 2 }}>
+          <List>
             {segments.map((segment, index) => (
               <motion.div key={segment.id} variants={item}>
                 <ListItem
                   disablePadding
                   sx={{
                     mb: 2,
-                    bgcolor: "background.paper",
                     borderRadius: 2,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                     overflow: "hidden",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    bgcolor: "white",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      transform: "translateY(-3px)",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
                     },
                   }}
                 >
                   <ListItemButton
                     onClick={() => handleSegmentClick(segment.id)}
+                    sx={{ py: 2 }}
                   >
                     <ListItemIcon>
                       <Avatar
@@ -275,7 +241,8 @@ export default function TrackSegmentsPage() {
                           bgcolor: segment.completed
                             ? "success.main"
                             : "primary.main",
-                          color: "white",
+                          width: 36,
+                          height: 36,
                         }}
                       >
                         {segment.completed ? <CheckCircle /> : index + 1}
@@ -283,42 +250,42 @@ export default function TrackSegmentsPage() {
                     </ListItemIcon>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            {segment.name
-                              ? segment.name
-                              : `Segment ${segment.id}`}
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Segment {index + 1}
+                        </Typography>
+                      }
+                      secondary={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            mt: 0.5,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ display: "flex", alignItems: "center" }}
+                          >
+                            Duration: {formatTime(segment.segmentDuration)}
                           </Typography>
                           {segment.completed && (
                             <Chip
-                              size="small"
                               label="Completed"
+                              size="small"
                               color="success"
-                              variant="outlined"
-                              sx={{ ml: 2 }}
+                              sx={{ height: 24 }}
                             />
                           )}
                         </Box>
                       }
-                      secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          Duration: {formatTime(segment.segmentDuration)}
-                        </Typography>
-                      }
                     />
-                    <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<PlayArrow />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSegmentClick(segment.id);
-                        }}
-                      >
-                        Practice
-                      </Button>
-                    </Box>
+                    <PlayArrow color="primary" />
                   </ListItemButton>
                 </ListItem>
               </motion.div>

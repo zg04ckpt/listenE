@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import PlayLessonIcon from "@mui/icons-material/PlayLesson";
 import TopicIcon from "@mui/icons-material/Topic";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import { useNavigate } from "react-router-dom";
@@ -73,21 +72,6 @@ export default function NavBar() {
           navigate("/dashboard/manage-topic");
           setValue("topics");
           localStorage.setItem("navItem", "topics");
-        }}
-      />
-      <BottomNavigationAction
-        sx={{
-          outline: "none !important",
-          border: "none",
-          width: "calc(100% + 40px)",
-        }}
-        label="Quản lý các session"
-        value="sessions"
-        icon={<PlayLessonIcon />}
-        onClick={() => {
-          navigate("/dashboard/manage-session");
-          setValue("sessions");
-          localStorage.setItem("navItem", "sessions");
         }}
       />
       <BottomNavigationAction

@@ -1,67 +1,66 @@
 services:
-  web:
-    container_name: web
-    image: web:2.0
-    build: 
-      context: ./Client/Web
-      dockerfile: Dockerfile
-    depends_on:
-      - api
-    ports:
-      - "4200:80"
-    volumes:
-      - nginx-config:/etc/nginx/conf.d
-    restart: always
-
   api:
-    container_name: api
-    image: api:2.0
-    build: 
-      context: ./Api
+    container_name: listene_api_demo
+    build:
+      context: ./Server
       dockerfile: Dockerfile.api
     environment:
-      TZ: "Asia/Ho_Chi_Minh"
-      SYSTEM_EMAIL: "[email làm bot để gửi mail]"
-      SYSTEM_EMAIL_PASS: "[mật khẩu ứng dụng của bot mail]"
-      ADMIN_EMAIL: "[email tài khoản admin]"
-      ADMIN_PASSWORD: "[mật khẩu]"
-      ASPNETCORE_ENVIRONMENT: "Development"
-      SECRET_KEY: "[khóa bí mật để sinh token]"
-    volumes:
-      - resources:/App/Resources
-      - logs:/App/Logs
+      - MYSQL_CONNECTION_STRING=Server=listene_db_demo;Port=[db_post];Database=[db_name];Uid=[db_username];Pwd=[db_password]
+      - ADMIN_EMAIL=[admin_email]
+      - ADMIN_PASSWORD=[admin_password]
+      - ASPNETCORE_ENVIRONMENT=Demo
+      - LISTENE_CLOUDINARY_NAME=[cloudinary_name]
+      - LISTENE_CLOUDINARY_API_KEY=[cloudinary_key]
+      - LISTENE_CLOUDINARY_API_SECRET=[cloudinary_secret]
+      - SYSTEM_EMAIL=[mailbot_email]
+      - SYSTEM_EMAIL_APP_PASSWORD=[mailbot_password]
+      - GoogleClientId=[google_client_id]
+      - GoogleClientSecret=[google_client_secret]
     ports:
-      - 5000:80
+      - "[api_run_port]:80"
+    networks:
+      - app-network_demo
     depends_on:
       - db
-    networks:
-      - app-network
+      - redis
+    volumes:
+      - api-resources_demo:/App/Resources
+      - api-logs_demo:/App/Logs
     restart: always
 
+  redis:
+    container_name: listene_redis_demo
+    image: redis:latest
+    networks:
+      - app-network_demo
+    volumes:
+      - redis-data_demo:/data
+    restart: unless-stopped
 
   db:
+    container_name: listene_db_demo
     build:
-      context: ./Api
+      context: ./Server
       dockerfile: Dockerfile.mysql
-    image: mysql:8.0.37
-    container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: "[mật khẩu tài khoản root]"
-      MYSQL_DATABASE: "[db mặc định]"
-    volumes:
-      - mysql-data:/var/lib/mysql
+      - MYSQL_ROOT_PASSWORD=[db_post]
+      - MYSQL_DATABASE=[db_name]
     ports:
-      - 3307:3306
+      - "[db_post]:3306"
+    volumes:
+      - listene_db_demo:/var/lib/mysql
     networks:
-      - app-network
+      - app-network_demo
     restart: always
 
 volumes:
-  nginx-config:
-  logs:
-  resources:
-  mysql-data:
+  listene_db_demo:
+  redis-data_demo:
+  api-resources_demo:
+  api-logs_demo:
 
 networks:
-  app-network:
-    driver: bridge
+  app-network_demo:
+    external: false
+
+
